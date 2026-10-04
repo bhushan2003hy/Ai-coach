@@ -27,7 +27,12 @@
     </a>
 
     <nav>
-        <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode">
+
+        <button
+            class="icon-btn"
+            id="themeBtn"
+            type="button"
+            aria-label="Toggle dark mode">
             ◐
         </button>
 
@@ -35,8 +40,10 @@
             Sign in
         </a>
 
-        <a href="#" class="pill">Explore Placement Prep</a>
-        
+        <a href="#" class="pill">
+            Explore Placement Prep
+        </a>
+
     </nav>
 
 </header>
@@ -48,23 +55,30 @@
 
     <aside class="deco deco-left">
 
-    <div class="bubble">
-        <small>Start your journey</small>
+        <div class="bubble">
 
-        <p>
-            Create your PlaceMate AI account and organize your placement preparation in one place.
-        </p>
-    </div>
+            <small>Start your journey</small>
 
-    <div class="bubble">
-        <small>What you can do</small>
+            <p>
+                Create your PlaceMate AI account and organize your
+                placement preparation in one place.
+            </p>
 
-        <p>
-            Practice interviews, improve your skills and prepare for your dream job.
-        </p>
-    </div>
+        </div>
 
-</aside>
+
+        <div class="bubble">
+
+            <small>What you can do</small>
+
+            <p>
+                Practice interviews, improve your skills and prepare
+                for your dream job.
+            </p>
+
+        </div>
+
+    </aside>
 
 
     <!-- REGISTER CARD -->
@@ -74,67 +88,90 @@
         <h1 id="title">
             Create Student Account
         </h1>
-        <h1 id="title">
-    Create Student Account
-</h1>
 
-{% if error %}
-<p class="err">{{ error }}</p>
-{% endif %}
 
-{% if success %}
-<p style="color: green;">{{ success }}</p>
-{% endif %}
+        {% if error %}
+            <p class="err">
+                {{ error }}
+            </p>
+        {% endif %}
 
-<p class="sub">
-    Create your free PlaceMate AI account.
-</p>
+
+        {% if success %}
+            <p style="color: green;">
+                {{ success }}
+            </p>
+        {% endif %}
+
 
         <p class="sub">
             Create your free PlaceMate AI account.
         </p>
 
 
-        <!-- REGISTER TABS -->
+        <!-- =========================================
+             REGISTER TABS
+        ========================================== -->
 
-        <div class="tabs" role="tablist">
-
-            <button
-                role="tab"
-                class="tab active"
-                data-register-mode="email"
-                aria-selected="true">
-                Email
-            </button>
-
-            <button
-                role="tab"
-                class="tab"
-                data-register-mode="mobile"
-                aria-selected="false">
-                Mobile OTP
-            </button>
+        <div
+            class="tabs"
+            role="tablist"
+            data-mode="email">
 
             <span class="tab-ink"></span>
+
+
+            <button
+                type="button"
+                role="tab"
+                class="tab active"
+                data-mode="email"
+                aria-selected="true">
+
+                Email
+
+            </button>
+
+
+            <button
+                type="button"
+                role="tab"
+                class="tab"
+                data-mode="mobile"
+                aria-selected="false">
+
+                Mobile OTP
+
+            </button>
 
         </div>
 
 
-        <!-- EMAIL REGISTER FORM -->
+        <!-- =========================================
+             EMAIL REGISTER FORM
+        ========================================== -->
 
         <form
-            id="emailRegisterForm"
+            id="emailForm"
             class="panel"
             method="POST"
             novalidate>
 
             {% csrf_token %}
 
+            <input
+                type="hidden"
+                name="register_type"
+                value="email">
+
+
+            <!-- EMAIL -->
+
             <label class="field">
 
                 <input
                     type="email"
-                    id="registerEmail"
+                    id="email"
                     name="email"
                     placeholder="College or personal email"
                     autocomplete="email"
@@ -142,59 +179,101 @@
 
             </label>
 
-            <p class="err" id="registerEmailErr"></p>
 
+            <p
+                class="err"
+                id="emailErr">
+            </p>
+
+
+            <!-- PASSWORD -->
 
             <label class="field">
 
                 <input
                     type="password"
-                    id="registerPass"
+                    id="pass"
                     name="password"
                     placeholder="Create password"
                     autocomplete="new-password"
                     required>
 
+
                 <button
                     type="button"
                     class="toggle"
-                    id="toggleRegisterPass">
+                    id="togglePass">
+
                     Show
+
                 </button>
 
             </label>
 
-            <p class="err" id="registerPassErr"></p>
+
+            <p
+                class="err"
+                id="passErr">
+            </p>
 
 
-            <div class="meter" id="registerMeter">
+            <!-- PASSWORD STRENGTH -->
+
+            <div
+                class="meter"
+                id="meter">
+
                 <i></i>
                 <i></i>
                 <i></i>
                 <i></i>
+
             </div>
 
+
+            <!-- CREATE ACCOUNT -->
 
             <button
                 class="primary"
                 type="submit">
+
                 Create Account
+
             </button>
 
         </form>
 
 
-        <!-- MOBILE OTP FORM -->
+        <!-- =========================================
+             MOBILE OTP REGISTER FORM
+        ========================================== -->
 
         <form
-            id="mobileRegisterForm"
+            id="mobileForm"
             class="panel hidden"
             method="POST"
             novalidate>
 
             {% csrf_token %}
 
-            <label class="field phone">
+            <input
+                type="hidden"
+                name="register_type"
+                value="mobile">
+
+
+            <!-- FIREBASE ID TOKEN -->
+
+            <input
+                type="hidden"
+                name="firebase_id_token"
+                id="firebase_id_token"
+                value="">
+
+
+            <!-- MOBILE NUMBER -->
+
+            <label class="field">
 
                 <span class="cc">
                     +91
@@ -202,58 +281,116 @@
 
                 <input
                     type="tel"
-                    id="registerPhone"
+                    id="phone"
                     name="phone"
                     placeholder="10-digit mobile number"
                     maxlength="10"
-                    inputmode="numeric">
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    value="{{ phone|default:'' }}"
+                    required>
 
             </label>
 
-            <p class="err" id="registerPhoneErr"></p>
+
+            <p
+                class="err"
+                id="phoneErr">
+            </p>
 
 
-            <!-- OTP AREA -->
+            <!-- =====================================
+                 OTP AREA
+            ====================================== -->
 
-            <div id="registerOtpWrap" class="hidden">
+            <div
+                id="otpWrap"
+                class="hidden">
 
                 <p class="hint">
+
                     Enter the 6-digit code sent to
-                    <b id="registerSentTo"></b>
+
+                    <b id="sentTo"></b>
+
                 </p>
 
 
-                <div class="otp" id="registerOtp">
+                <div
+                    class="otp"
+                    id="otp">
 
-                    <input maxlength="1" inputmode="numeric">
-                    <input maxlength="1" inputmode="numeric">
-                    <input maxlength="1" inputmode="numeric">
-                    <input maxlength="1" inputmode="numeric">
-                    <input maxlength="1" inputmode="numeric">
-                    <input maxlength="1" inputmode="numeric">
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric"
+                        autocomplete="one-time-code">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
 
                 </div>
 
 
-                <p class="err" id="registerOtpErr"></p>
+                <p
+                    class="err"
+                    id="otpErr">
+                </p>
 
 
                 <button
                     type="button"
                     class="resend"
-                    id="registerResend"
+                    id="resend"
                     disabled>
+
                     Resend code in 30s
+
                 </button>
 
             </div>
 
 
+            <!-- =====================================
+                 FIREBASE reCAPTCHA
+            ====================================== -->
+
+            <div
+                id="recaptcha-container">
+            </div>
+
+
+            <!-- MOBILE BUTTON -->
+
             <button
                 class="primary"
-                type="submit"
-                id="registerMobileBtn">
+                type="button"
+                id="mobileBtn">
+
                 Send OTP
+
             </button>
 
         </form>
@@ -274,13 +411,20 @@
     </section>
 
 
-    <!-- RIGHT DECORATION -->
+    <!-- RIGHT STUDENT IMAGE -->
 
- <aside class="register-illustration">
-    <img src="{% static 'images/student.png' %}" alt="Student studying">
-</aside>
+    <aside class="register-illustration">
+
+        <img
+            src="{% static 'images/student.png' %}"
+            alt="Student studying">
+
+    </aside>
+
 </main>
 
+
+<!-- FOOTER -->
 
 <p class="copy">
 
@@ -293,6 +437,8 @@
 </p>
 
 
+<!-- TOAST -->
+
 <div
     class="toast"
     id="toast"
@@ -300,27 +446,46 @@
 </div>
 
 
-<script src="{% static 'Script.JS' %}"></script>
+<!-- =========================================
+     FIREBASE
+========================================= -->
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const button = document.getElementById("toggleRegisterPass");
-    const password = document.getElementById("registerPass");
+    var config = {
 
-    button.addEventListener("click", function () {
+        apiKey: "AIzaSyDUqBnXWMMV68NlIhp1sn2EKXB2EYPK5nI",
 
-        if (password.type === "password") {
-            password.type = "text";
-            button.innerText = "Hide";
-        } else {
-            password.type = "password";
-            button.innerText = "Show";
-        }
+        authDomain:
+            "ai-placement-coach-510607.firebaseapp.com"
 
-    });
+    };
 
-});
+
+    if (!firebase.apps.length) {
+
+        firebase.initializeApp(config);
+
+    }
+
+
+    console.log(
+        "Firebase initialized successfully."
+    );
+
 </script>
+
+
+<!-- =========================================
+     MAIN JAVASCRIPT
+========================================= -->
+
+<script src="{% static 'Script.JS' %}"></script>
 
 
 </body>

@@ -67,11 +67,48 @@ a{color:inherit}
 .card h1{font:800 28px 'Bricolage Grotesque',sans-serif;letter-spacing:-.5px}
 .sub{color:var(--muted);font-size:14px;margin:8px 0 20px}
 
-.tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:18px}
-.tab{position:relative;z-index:1;background:none;border:0;padding:9px;font:600 13px 'DM Sans';color:var(--muted);cursor:pointer;border-radius:9px}
-.tab.active{color:var(--ink)}
-.tab-ink{position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);background:var(--card);border-radius:9px;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform .25s}
-.tabs[data-mode="mobile"] .tab-ink{transform:translateX(100%)}
+.tabs{
+    position:relative;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:var(--bg);
+    border-radius:12px;
+    padding:4px;
+    margin-bottom:18px;
+}
+
+.tab{
+    position:relative;
+    z-index:1;
+    background:none;
+    border:0;
+    padding:9px;
+    font:600 13px 'DM Sans';
+    color:var(--muted);
+    cursor:pointer;
+    border-radius:9px;
+}
+
+.tab.active{
+    color:var(--ink);
+}
+
+.tab-ink{
+    position:absolute;
+    top:4px;
+    left:4px;
+    width:calc(50% - 4px);
+    height:calc(100% - 8px);
+    background:var(--card);
+    border-radius:9px;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
+    transition:transform .25s ease;
+    pointer-events:none;
+}
+
+.tabs[data-mode="mobile"] .tab-ink{
+    transform:translateX(100%);
+}
 
 .panel{display:flex;flex-direction:column;gap:6px;text-align:left}
 .hidden{display:none!important}
@@ -223,7 +260,7 @@ a{color:inherit}
 }
 
 
-/
+
 /* New one */
 /* =========================
    FORGOT PASSWORD LAYOUT
@@ -455,4 +492,51 @@ a{color:inherit}
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* =========================================================
+   FIREBASE reCAPTCHA
+   Prevent reCAPTCHA layer from blocking OTP button
+========================================================= */
+
+#mobileBtn {
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+
+/* #recaptcha-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0 14px;
+    min-height: 78px;
+}
+
+#recaptcha-container iframe {
+    max-width: 100%;
+} */
+
+/* =========================================
+   MOBILE OTP - DYNAMIC reCAPTCHA
+========================================= */
+
+#mobileForm #recaptcha-container {
+    width: 100%;
+    margin: 8px 0 12px;
+    display: none;
+}
+
+/* Firebase reCAPTCHA ke iframe ko center rakho */
+#mobileForm #recaptcha-container > div {
+    margin: 0 auto;
+}
+
+/* reCAPTCHA visible hone ke baad button naturally neeche jayega */
+#mobileForm #recaptcha-container.recaptcha-visible {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
