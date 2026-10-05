@@ -1,0 +1,13 @@
+////For push code on github
+git add .
+git commit -m "Describe your changes"
+git push
+//////////mobile website access
+py manage.py runserver 0.0.0.0:8000
+ngrok http 8000
+///////delit user form databse
+python manage.py shell
+
+from django.contrib.auth.models import User
+User.objects.all().delete()
+

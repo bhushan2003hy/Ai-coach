@@ -1,4 +1,3 @@
-
 (() => {
 
     // =========================================================
@@ -17,23 +16,19 @@
     // =========================================================
 
     const toast = $('#toast');
-
-    let toastTimer;
+    let toastTimer = null;
 
     function showToast(message) {
 
         if (!toast) return;
 
         toast.textContent = message;
-
         toast.classList.add('show');
 
         clearTimeout(toastTimer);
 
         toastTimer = setTimeout(() => {
-
             toast.classList.remove('show');
-
         }, 2800);
     }
 
@@ -43,7 +38,6 @@
     // =========================================================
 
     const root = document.documentElement;
-
     const themeBtn = $('#themeBtn');
 
     try {
@@ -54,6 +48,7 @@
     } catch (error) {
 
         root.dataset.theme = 'light';
+
     }
 
 
@@ -85,11 +80,9 @@
     // =========================================================
 
     const tabs = $('.tabs');
-
     const tabButtons = $$('.tab');
 
     const emailForm = $('#emailForm');
-
     const mobileForm = $('#mobileForm');
 
 
@@ -98,7 +91,6 @@
         if (!tabs) return;
 
         tabs.dataset.mode = mode;
-
 
         tabButtons.forEach(button => {
 
@@ -215,6 +207,8 @@
             loading
         );
 
+        button.disabled = loading;
+
         if (text) {
 
             button.textContent = text;
@@ -229,9 +223,7 @@
     // =========================================================
 
     const pass = $('#pass');
-
     const togglePass = $('#togglePass');
-
     const meter = $('#meter');
 
 
@@ -290,6 +282,7 @@
             return password
                 ? Math.max(score, 1)
                 : 0;
+
         }
 
 
@@ -311,8 +304,712 @@
 
 
     // =========================================================
-    // EMAIL FORM
-    // IMPORTANT: EMAIL REGISTRATION UNCHANGED
+    // EMAIL OTP
+    // =========================================================
+
+    const emailInput =
+        $('#email');
+
+    const passwordInput =
+        $('#pass');
+
+    const emailOtpBtn =
+        $('#emailOtpBtn');
+
+    const emailOtpWrap =
+        $('#emailOtpWrap');
+
+    const emailSentTo =
+        $('#emailSentTo');
+
+    const emailOtpBoxes =
+        $$('#emailOtp input');
+
+    const emailOtpErr =
+        $('#emailOtpErr');
+
+    const emailResend =
+        $('#emailResend');
+
+    const verifyEmailOtpBtn =
+        $('#verifyEmailOtpBtn');
+
+    const createEmailAccountBtn =
+        $('#createEmailAccountBtn');
+
+
+    let emailOtpSent = false;
+    let emailOtpVerified = false;
+    let emailOtpCountdown = null;
+
+
+    // =========================================================
+    // EMAIL OTP INPUT BOXES
+    // =========================================================
+
+    emailOtpBoxes.forEach((box, index) => {
+
+        box.addEventListener(
+            'input',
+            () => {
+
+                box.value =
+                    box.value
+                        .replace(/\D/g, '')
+                        .slice(0, 1);
+
+
+                if (
+                    box.value &&
+                    emailOtpBoxes[index + 1]
+                ) {
+
+                    emailOtpBoxes[index + 1].focus();
+
+                }
+
+            }
+        );
+
+
+        box.addEventListener(
+            'keydown',
+            event => {
+
+                if (
+                    event.key === 'Backspace' &&
+                    !box.value &&
+                    emailOtpBoxes[index - 1]
+                ) {
+
+                    emailOtpBoxes[index - 1].focus();
+
+                }
+
+            }
+        );
+
+
+        box.addEventListener(
+            'paste',
+            event => {
+
+                const data =
+                    (
+                        event.clipboardData
+                            .getData('text') || ''
+                    )
+                    .replace(/\D/g, '')
+                    .slice(0, 6);
+
+
+                if (!data) return;
+
+                event.preventDefault();
+
+
+                data.split('').forEach(
+                    (digit, i) => {
+
+                        if (emailOtpBoxes[i]) {
+
+                            emailOtpBoxes[i].value =
+                                digit;
+
+                        }
+
+                    }
+                );
+
+
+                const nextIndex =
+                    Math.min(
+                        data.length,
+                        emailOtpBoxes.length - 1
+                    );
+
+
+                if (emailOtpBoxes[nextIndex]) {
+
+                    emailOtpBoxes[nextIndex].focus();
+
+                }
+
+            }
+        );
+
+    });
+
+
+    // =========================================================
+    // EMAIL OTP TIMER
+    // =========================================================
+
+    function startEmailOtpTimer() {
+
+        if (!emailResend) return;
+
+        let seconds = 30;
+
+        emailResend.disabled = true;
+
+        clearInterval(emailOtpCountdown);
+
+        emailResend.textContent =
+            `Resend code in ${seconds}s`;
+
+
+        emailOtpCountdown =
+            setInterval(() => {
+
+                seconds--;
+
+
+                if (seconds <= 0) {
+
+                    clearInterval(
+                        emailOtpCountdown
+                    );
+
+                    emailResend.disabled =
+                        false;
+
+                    emailResend.textContent =
+                        'Resend code';
+
+                } else {
+
+                    emailResend.textContent =
+                        `Resend code in ${seconds}s`;
+
+                }
+
+            }, 1000);
+
+    }
+
+
+    // =========================================================
+    // SEND EMAIL OTP
+    // =========================================================
+
+    async function sendEmailOTP() {
+
+        if (
+            !emailInput ||
+            !emailOtpBtn ||
+            !emailForm
+        ) {
+            return;
+        }
+
+
+        const email =
+            emailInput.value
+                .trim()
+                .toLowerCase();
+
+
+        // =====================================================
+        // EMAIL VALIDATION
+        // =====================================================
+
+        if (
+            !/^\S+@\S+\.\S+$/.test(email)
+        ) {
+
+            setErr(
+                'emailErr',
+                'Enter a valid email address.'
+            );
+
+            emailInput.focus();
+
+            return;
+
+        }
+
+
+        setErr('emailErr', '');
+        setErr('emailOtpErr', '');
+
+
+        // =====================================================
+        // CSRF TOKEN
+        // =====================================================
+
+        const csrfToken =
+            emailForm.querySelector(
+                'input[name="csrfmiddlewaretoken"]'
+            )?.value;
+
+
+        if (!csrfToken) {
+
+            setErr(
+                'emailErr',
+                'Security token missing. Please refresh the page.'
+            );
+
+            return;
+
+        }
+
+
+        // =====================================================
+        // SEND REQUEST TO DJANGO
+        // =====================================================
+
+        try {
+
+            busy(
+                emailOtpBtn,
+                true,
+                'Sending OTP...'
+            );
+
+
+            const response =
+                await fetch(
+                    '/register/send-email-otp/',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded',
+
+                            'X-CSRFToken':
+                                csrfToken
+                        },
+
+                        body:
+                            new URLSearchParams({
+                                email: email
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                'SEND EMAIL OTP RESPONSE:',
+                data
+            );
+
+
+            if (!data.success) {
+
+                setErr(
+                    'emailErr',
+                    data.message ||
+                    'Unable to send OTP.'
+                );
+
+                busy(
+                    emailOtpBtn,
+                    false,
+                    'Send OTP'
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // OTP SENT
+            // =================================================
+
+            emailOtpSent = true;
+            emailOtpVerified = false;
+
+
+            if (emailSentTo) {
+
+                emailSentTo.textContent =
+                    email;
+
+            }
+
+
+            if (emailOtpWrap) {
+
+                emailOtpWrap.classList.remove(
+                    'hidden'
+                );
+
+            }
+
+
+            emailOtpBoxes.forEach(box => {
+                box.value = '';
+            });
+
+
+            emailOtpBtn.disabled = true;
+
+            emailOtpBtn.textContent =
+                'OTP Sent';
+
+
+            if (verifyEmailOtpBtn) {
+
+                verifyEmailOtpBtn.disabled =
+                    false;
+
+                verifyEmailOtpBtn.textContent =
+                    'Verify Email';
+
+            }
+
+
+            if (createEmailAccountBtn) {
+
+                createEmailAccountBtn.disabled =
+                    true;
+
+            }
+
+
+            showToast(
+                'OTP sent to your email.'
+            );
+
+
+            startEmailOtpTimer();
+
+
+            if (emailOtpBoxes[0]) {
+
+                emailOtpBoxes[0].focus();
+
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                'EMAIL OTP ERROR:',
+                error
+            );
+
+
+            setErr(
+                'emailErr',
+                'Unable to send OTP. Please try again.'
+            );
+
+
+            busy(
+                emailOtpBtn,
+                false,
+                'Send OTP'
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // VERIFY EMAIL OTP
+    // =========================================================
+
+    async function verifyEmailOTP() {
+
+        if (
+            !emailInput ||
+            !verifyEmailOtpBtn ||
+            !emailForm
+        ) {
+            return;
+        }
+
+
+        if (!emailOtpSent) {
+
+            setErr(
+                'emailOtpErr',
+                'Please request an OTP first.'
+            );
+
+            return;
+
+        }
+
+
+        const email =
+            emailInput.value
+                .trim()
+                .toLowerCase();
+
+
+        const otp =
+            emailOtpBoxes
+                .map(box => box.value)
+                .join('');
+
+
+        // =====================================================
+        // OTP VALIDATION
+        // =====================================================
+
+        if (otp.length !== 6) {
+
+            setErr(
+                'emailOtpErr',
+                'Enter all 6 digits.'
+            );
+
+            return;
+
+        }
+
+
+        const csrfToken =
+            emailForm.querySelector(
+                'input[name="csrfmiddlewaretoken"]'
+            )?.value;
+
+
+        if (!csrfToken) {
+
+            setErr(
+                'emailOtpErr',
+                'Security token missing. Please refresh the page.'
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            busy(
+                verifyEmailOtpBtn,
+                true,
+                'Verifying...'
+            );
+
+
+            const response =
+                await fetch(
+                    '/register/verify-email-otp/',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded',
+
+                            'X-CSRFToken':
+                                csrfToken
+                        },
+
+                        body:
+                            new URLSearchParams({
+                                email: email,
+                                otp: otp
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                'VERIFY EMAIL OTP RESPONSE:',
+                data
+            );
+
+
+            if (!data.success) {
+
+                setErr(
+                    'emailOtpErr',
+                    data.message ||
+                    'Invalid OTP.'
+                );
+
+                busy(
+                    verifyEmailOtpBtn,
+                    false,
+                    'Verify Email'
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // EMAIL VERIFIED
+            // =================================================
+
+            emailOtpVerified = true;
+
+
+            setErr(
+                'emailOtpErr',
+                ''
+            );
+
+
+            showToast(
+                'Email verified successfully!'
+            );
+
+
+            verifyEmailOtpBtn.textContent =
+                'Email Verified ✓';
+
+            verifyEmailOtpBtn.disabled =
+                true;
+
+
+            if (emailOtpBtn) {
+
+                emailOtpBtn.textContent =
+                    'Email Verified ✓';
+
+                emailOtpBtn.disabled =
+                    true;
+
+            }
+
+
+            if (emailInput) {
+
+                emailInput.readOnly =
+                    true;
+
+            }
+
+
+            if (createEmailAccountBtn) {
+
+                createEmailAccountBtn.disabled =
+                    false;
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                'VERIFY EMAIL OTP ERROR:',
+                error
+            );
+
+
+            busy(
+                verifyEmailOtpBtn,
+                false,
+                'Verify Email'
+            );
+
+
+            setErr(
+                'emailOtpErr',
+                'Unable to verify OTP. Please try again.'
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // SEND EMAIL OTP BUTTON
+    // =========================================================
+
+    if (emailOtpBtn) {
+
+        emailOtpBtn.addEventListener(
+            'click',
+            async event => {
+
+                event.preventDefault();
+
+                await sendEmailOTP();
+
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // VERIFY EMAIL OTP BUTTON
+    // =========================================================
+
+    if (verifyEmailOtpBtn) {
+
+        verifyEmailOtpBtn.addEventListener(
+            'click',
+            async event => {
+
+                event.preventDefault();
+
+                await verifyEmailOTP();
+
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // RESEND EMAIL OTP
+    // =========================================================
+
+    if (emailResend) {
+
+        emailResend.addEventListener(
+            'click',
+            async () => {
+
+                if (emailResend.disabled) {
+                    return;
+                }
+
+
+                emailOtpBoxes.forEach(box => {
+                    box.value = '';
+                });
+
+
+                emailOtpSent = false;
+                emailOtpVerified = false;
+
+
+                if (verifyEmailOtpBtn) {
+
+                    verifyEmailOtpBtn.disabled =
+                        false;
+
+                    verifyEmailOtpBtn.textContent =
+                        'Verify Email';
+
+                }
+
+
+                await sendEmailOTP();
+
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // EMAIL FORM SUBMIT
     // =========================================================
 
     if (emailForm) {
@@ -320,13 +1017,6 @@
         emailForm.addEventListener(
             'submit',
             event => {
-
-                const emailInput =
-                    $('#email');
-
-                const passwordInput =
-                    $('#pass');
-
 
                 const email =
                     emailInput
@@ -343,7 +1033,10 @@
                 let valid = true;
 
 
-                // Correct email validation
+                // ---------------------------------------------
+                // EMAIL
+                // ---------------------------------------------
+
                 if (
                     !/^\S+@\S+\.\S+$/.test(email)
                 ) {
@@ -365,7 +1058,10 @@
                 }
 
 
-                // Password validation
+                // ---------------------------------------------
+                // PASSWORD
+                // ---------------------------------------------
+
                 if (password.length < 6) {
 
                     setErr(
@@ -385,6 +1081,18 @@
                 }
 
 
+                // ---------------------------------------------
+                // EMAIL OTP
+                // ---------------------------------------------
+
+
+               
+
+
+                // ---------------------------------------------
+                // STOP SUBMIT
+                // ---------------------------------------------
+
                 if (!valid) {
 
                     event.preventDefault();
@@ -394,9 +1102,13 @@
                 }
 
 
+                // ---------------------------------------------
+                // ACCOUNT CREATION
+                // ---------------------------------------------
+
                 const button =
                     event.submitter ||
-                    $('.primary', emailForm);
+                    createEmailAccountBtn;
 
 
                 busy(
@@ -405,7 +1117,7 @@
                     'Creating account...'
                 );
 
-                // Django email registration continues normally.
+                // Django receives the POST normally.
 
             }
         );
@@ -417,7 +1129,8 @@
     // FIREBASE MOBILE OTP
     // =========================================================
 
-    const phone = $('#phone');
+    const phone =
+        $('#phone');
 
     const mobileFormElement =
         $('#mobileForm');
@@ -435,11 +1148,14 @@
         $('#resend');
 
 
-    let confirmationResult = null;
+    let confirmationResult =
+        null;
 
-    let otpSent = false;
+    let otpSent =
+        false;
 
-    let countdown = null;
+    let countdown =
+        null;
 
 
     // =========================================================
@@ -464,7 +1180,7 @@
 
 
     // =========================================================
-    // OTP INPUT BOXES
+    // MOBILE OTP BOXES
     // =========================================================
 
     otpBoxes.forEach((box, index) => {
@@ -562,7 +1278,7 @@
 
 
     // =========================================================
-    // OTP TIMER
+    // MOBILE OTP TIMER
     // =========================================================
 
     function startTimer() {
@@ -571,7 +1287,8 @@
 
         let seconds = 30;
 
-        resendButton.disabled = true;
+        resendButton.disabled =
+            true;
 
         clearInterval(countdown);
 
@@ -609,45 +1326,51 @@
 
 
     // =========================================================
-    // SHOW OTP AREA
+    // SHOW MOBILE OTP AREA
     // =========================================================
 
     function showOtpArea(number) {
 
         otpSent = true;
 
-        // Remove reCAPTCHA after OTP is sent
-const recaptchaContainer =
-    document.getElementById(
-        'recaptcha-container'
-    );
 
-if (recaptchaContainer) {
+        const recaptchaContainer =
+            document.getElementById(
+                'recaptcha-container'
+            );
 
-    if (window.recaptchaVerifier) {
 
-        try {
+        if (recaptchaContainer) {
 
-            window.recaptchaVerifier.clear();
+            if (window.recaptchaVerifier) {
 
-        } catch (error) {
+                try {
 
-            console.error(
-                'reCAPTCHA clear error:',
-                error
+                    window.recaptchaVerifier.clear();
+
+                } catch (error) {
+
+                    console.error(
+                        'reCAPTCHA clear error:',
+                        error
+                    );
+
+                }
+
+                window.recaptchaVerifier =
+                    null;
+
+            }
+
+
+            recaptchaContainer.innerHTML =
+                '';
+
+            recaptchaContainer.classList.remove(
+                'recaptcha-visible'
             );
 
         }
-
-        window.recaptchaVerifier = null;
-    }
-
-    recaptchaContainer.innerHTML = '';
-
-    recaptchaContainer.classList.remove(
-        'recaptcha-visible'
-    );
-}
 
 
         const sentTo =
@@ -690,7 +1413,7 @@ if (recaptchaContainer) {
 
 
         startTimer();
-       
+
     }
 
 
@@ -700,485 +1423,514 @@ if (recaptchaContainer) {
 
     function createRecaptcha() {
 
-    if (
-        typeof firebase === 'undefined' ||
-        !firebase.auth
-    ) {
+        if (
+            typeof firebase === 'undefined' ||
+            !firebase.auth
+        ) {
 
-        throw new Error(
-            'Firebase Auth is not loaded.'
+            throw new Error(
+                'Firebase Auth is not loaded.'
+            );
+
+        }
+
+
+        const container =
+            document.getElementById(
+                'recaptcha-container'
+            );
+
+
+        if (!container) {
+
+            throw new Error(
+                'reCAPTCHA container not found.'
+            );
+
+        }
+
+
+        if (window.recaptchaVerifier) {
+
+            return window.recaptchaVerifier;
+
+        }
+
+
+        container.innerHTML =
+            '';
+
+
+        window.recaptchaVerifier =
+            new firebase.auth.RecaptchaVerifier(
+                'recaptcha-container',
+                {
+
+                    size: 'normal',
+
+                    callback: function() {
+
+                        console.log(
+                            'reCAPTCHA verified successfully.'
+                        );
+
+                        container.dataset.verified =
+                            'true';
+
+                    },
+
+                    'expired-callback':
+                        function() {
+
+                            console.log(
+                                'reCAPTCHA expired.'
+                            );
+
+                            container.dataset.verified =
+                                'false';
+
+                        }
+
+                }
+            );
+
+
+        container.dataset.verified =
+            'false';
+
+
+        container.classList.add(
+            'recaptcha-visible'
         );
 
-    }
-
-    const container =
-        document.getElementById(
-            'recaptcha-container'
-        );
-
-    if (!container) {
-
-        throw new Error(
-            'reCAPTCHA container not found.'
-        );
-
-    }
-
-    // Already created
-    if (window.recaptchaVerifier) {
 
         return window.recaptchaVerifier;
 
     }
 
-    // Clear old CAPTCHA
-    container.innerHTML = '';
 
-    // Create visible reCAPTCHA
-    window.recaptchaVerifier =
-        new firebase.auth.RecaptchaVerifier(
-            'recaptcha-container',
-            {
-                size: 'normal',
-                callback: function(response) {
-
-                    console.log(
-                        'reCAPTCHA verified successfully.'
-                    );
-
-                    container.dataset.verified =
-                        'true';
-
-                },
-
-                'expired-callback': function() {
-
-                    console.log(
-                        'reCAPTCHA expired.'
-                    );
-
-                    container.dataset.verified =
-                        'false';
-
-                }
-            }
-        );
-
-    container.dataset.verified = 'false';
-
-    // Render CAPTCHA
-    window.recaptchaVerifier
-        .render()
-        .then(function(widgetId) {
-
-            window.recaptchaWidgetId =
-                widgetId;
-
-            console.log(
-                'reCAPTCHA rendered:',
-                widgetId
-            );
-
-        });
-
-    container.classList.add(
-        'recaptcha-visible'
-    );
-
-    return window.recaptchaVerifier;
-
-}
     // =========================================================
-    // FIREBASE SEND OTP
+    // SEND FIREBASE MOBILE OTP
     // =========================================================
 
     async function sendFirebaseOTP() {
 
-    if (!phone || !mobileBtn) {
-        return;
-    }
-
-    const number = phone.value.trim();
-
-    // =====================================================
-    // VALIDATE MOBILE NUMBER
-    // =====================================================
-
-    if (!/^[6-9]\d{9}$/.test(number)) {
-
-        setErr(
-            'phoneErr',
-            'Enter a valid 10-digit Indian mobile number.'
-        );
-
-        phone.focus();
-
-        return;
-    }
-
-    setErr('phoneErr', '');
-
-    // =====================================================
-    // DETECT LOGIN OR REGISTRATION PAGE
-    // =====================================================
-
-    const registerType =
-        mobileFormElement?.querySelector(
-            'input[name="register_type"]'
-        );
-
-    const isRegistration =
-        registerType &&
-        registerType.value === 'mobile';
-
-    const isLogin =
-        !isRegistration;
-
-    // =====================================================
-    // CHECK MOBILE IN DJANGO DATABASE
-    // =====================================================
-
-    try {
-
-        const csrfToken =
-            document.querySelector(
-                '#mobileForm input[name="csrfmiddlewaretoken"]'
-            )?.value;
-
-        if (!csrfToken) {
-
-            throw new Error(
-                'CSRF token not found.'
-            );
-
+        if (
+            !phone ||
+            !mobileBtn
+        ) {
+            return;
         }
 
-        busy(
-            mobileBtn,
-            true,
-            'Checking...'
-        );
 
-        const response =
-            await fetch(
-                '/check-mobile/',
-                {
-                    method: 'POST',
+        const number =
+            phone.value.trim();
 
-                    headers: {
-                        'Content-Type':
-                            'application/x-www-form-urlencoded',
 
-                        'X-CSRFToken':
-                            csrfToken
-                    },
-
-                    body:
-                        new URLSearchParams({
-                            phone: number
-                        })
-                }
-            );
-
-        const data =
-            await response.json();
-
-        console.log(
-            'MOBILE DATABASE CHECK:',
-            data
-        );
-
-        // =================================================
-        // LOGIN FLOW
-        // =================================================
-
-        if (isLogin) {
-
-            // Number is NOT registered
-            if (!data.registered) {
-
-                busy(
-                    mobileBtn,
-                    false,
-                    'Send OTP'
-                );
-
-                setErr(
-                    'phoneErr',
-                    'This mobile number is not registered. Please create an account first.'
-                );
-
-                return;
-            }
-
-            // Number IS registered
-            console.log(
-                'Login mobile number is registered.'
-            );
-        }
-
-        // =================================================
-        // REGISTRATION FLOW
-        // =================================================
-
-        if (isRegistration) {
-
-            // Number is ALREADY registered
-            if (data.registered) {
-
-                busy(
-                    mobileBtn,
-                    false,
-                    'Send OTP'
-                );
-
-                setErr(
-                    'phoneErr',
-                    'This mobile number is already registered. Please sign in.'
-                );
-
-                return;
-            }
-
-            // Number is NEW
-            console.log(
-                'Registration mobile number is new.'
-            );
-        }
-
-        // =================================================
-        // ONLY NOW CREATE reCAPTCHA
-        // =================================================
-
-        busy(
-            mobileBtn,
-            true,
-            'Sending OTP...'
-        );
-
-        const fullPhone =
-            '+91' + number;
-
-        console.log(
-            'Sending OTP to:',
-            fullPhone
-        );
-
-        // =================================================
-        // CREATE / REUSE reCAPTCHA
-        // =================================================
-
-        // =================================================
-// CREATE / REUSE reCAPTCHA
-// =================================================
-
-const verifier =
-    createRecaptcha();
-
-// =================================================
-// WAIT FOR reCAPTCHA TO RENDER
-// =================================================
-
-if (
-    !window.recaptchaWidgetId
-) {
-
-    await verifier.render();
-
-}
-
-// =================================================
-// CHECK: USER MUST MANUALLY VERIFY reCAPTCHA
-// =================================================
-
-const recaptchaContainer =
-    document.getElementById(
-        'recaptcha-container'
-    );
-
-if (
-    !recaptchaContainer ||
-    recaptchaContainer.dataset.verified !== 'true'
-) {
-
-    busy(
-        mobileBtn,
-        false,
-        'Send OTP'
-    );
-
-    setErr(
-        'phoneErr',
-        'Please verify "I\'m not a robot" first.'
-    );
-
-    return;
-}
-
-// =================================================
-// CAPTCHA VERIFIED
-// NOW SEND FIREBASE OTP
-// =================================================
-
-console.log(
-    'reCAPTCHA manually verified. Sending OTP...'
-);
-
-busy(
-    mobileBtn,
-    true,
-    'Sending OTP...'
-);
-
-confirmationResult =
-    await firebase
-        .auth()
-        .signInWithPhoneNumber(
-            fullPhone,
-            verifier
-        );
-        console.log(
-            'Firebase OTP sent successfully.'
-        );
-
-        showToast(
-            'OTP sent successfully.'
-        );
-
-        showOtpArea(number);
-
-    } catch (error) {
-
-        console.error(
-            'FIREBASE OTP ERROR:',
-            error
-        );
-
-        busy(
-            mobileBtn,
-            false,
-            'Send OTP'
-        );
-
-        let message =
-            'Unable to send OTP. Please try again.';
-
-        // =================================================
-        // CSRF ERROR
-        // =================================================
+        // =====================================================
+        // VALIDATE MOBILE
+        // =====================================================
 
         if (
-            error.message ===
-            'CSRF token not found.'
+            !/^[6-9]\d{9}$/.test(number)
         ) {
 
-            message =
-                'Security token missing. Please refresh the page.';
+            setErr(
+                'phoneErr',
+                'Enter a valid 10-digit Indian mobile number.'
+            );
+
+            phone.focus();
+
+            return;
+
         }
 
-        // =================================================
-        // FIREBASE ERRORS
-        // =================================================
-
-        else if (
-            error &&
-            error.code ===
-            'auth/invalid-phone-number'
-        ) {
-
-            message =
-                'Invalid mobile number.';
-        }
-
-        else if (
-            error &&
-            error.code ===
-            'auth/too-many-requests'
-        ) {
-
-            message =
-                'Too many attempts. Please try again later.';
-        }
-
-        else if (
-            error &&
-            error.code ===
-            'auth/captcha-check-failed'
-        ) {
-
-            message =
-                'reCAPTCHA verification failed. Please try again.';
-        }
-
-        else if (
-            error &&
-            error.code ===
-            'auth/quota-exceeded'
-        ) {
-
-            message =
-                'Firebase SMS limit has been exceeded.';
-        }
-
-        else if (
-            error &&
-            error.code ===
-            'auth/operation-not-allowed'
-        ) {
-
-            message =
-                'Phone authentication is not enabled in Firebase.';
-        }
-
-        else if (
-            error &&
-            error.code ===
-            'auth/argument-error'
-        ) {
-
-            message =
-                'reCAPTCHA could not be initialized. Please refresh the page and try again.';
-        }
 
         setErr(
             'phoneErr',
-            message
+            ''
         );
 
-        // =================================================
-        // RESET reCAPTCHA
-        // =================================================
+
+        // =====================================================
+        // REGISTRATION / LOGIN
+        // =====================================================
+
+        const registerType =
+            mobileFormElement?.querySelector(
+                'input[name="register_type"]'
+            );
+
+
+        const isRegistration =
+            registerType &&
+            registerType.value === 'mobile';
+
+
+        const isLogin =
+            !isRegistration;
+
 
         try {
 
-            if (window.recaptchaVerifier) {
+            const csrfToken =
+                mobileFormElement?.querySelector(
+                    'input[name="csrfmiddlewaretoken"]'
+                )?.value;
 
-                window.recaptchaVerifier.clear();
 
-                window.recaptchaVerifier =
-                    null;
+            if (!csrfToken) {
+
+                throw new Error(
+                    'CSRF token not found.'
+                );
+
             }
 
-        } catch (recaptchaError) {
+
+            // =================================================
+            // CHECK DATABASE
+            // =================================================
+
+            busy(
+                mobileBtn,
+                true,
+                'Checking...'
+            );
+
+
+            const response =
+                await fetch(
+                    '/check-mobile/',
+                    {
+
+                        method: 'POST',
+
+                        headers: {
+
+                            'Content-Type':
+                                'application/x-www-form-urlencoded',
+
+                            'X-CSRFToken':
+                                csrfToken
+
+                        },
+
+                        body:
+                            new URLSearchParams({
+                                phone: number
+                            })
+
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                'MOBILE DATABASE CHECK:',
+                data
+            );
+
+
+            // =================================================
+            // LOGIN
+            // =================================================
+
+            if (isLogin) {
+
+                if (!data.registered) {
+
+                    busy(
+                        mobileBtn,
+                        false,
+                        'Send OTP'
+                    );
+
+                    setErr(
+                        'phoneErr',
+                        'This mobile number is not registered. Please create an account first.'
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            // =================================================
+            // REGISTRATION
+            // =================================================
+
+            if (isRegistration) {
+
+                if (data.registered) {
+
+                    busy(
+                        mobileBtn,
+                        false,
+                        'Send OTP'
+                    );
+
+                    setErr(
+                        'phoneErr',
+                        'This mobile number is already registered. Please sign in.'
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            // =================================================
+            // CREATE CAPTCHA
+            // =================================================
+
+            busy(
+                mobileBtn,
+                true,
+                'Verify CAPTCHA...'
+            );
+
+
+            const fullPhone =
+                '+91' + number;
+
+
+            const verifier =
+                createRecaptcha();
+
+
+            // Render only when needed
+            if (!window.recaptchaWidgetId) {
+
+                window.recaptchaWidgetId =
+                    await verifier.render();
+
+            }
+
+
+            const recaptchaContainer =
+                document.getElementById(
+                    'recaptcha-container'
+                );
+
+
+            // =================================================
+            // USER MUST VERIFY CAPTCHA
+            // =================================================
+
+            if (
+                !recaptchaContainer ||
+                recaptchaContainer.dataset.verified !== 'true'
+            ) {
+
+                busy(
+                    mobileBtn,
+                    false,
+                    'Send OTP'
+                );
+
+                setErr(
+                    'phoneErr',
+                    'Please verify "I\'m not a robot" first.'
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // SEND FIREBASE OTP
+            // =================================================
+
+            busy(
+                mobileBtn,
+                true,
+                'Sending OTP...'
+            );
+
+
+            confirmationResult =
+                await firebase
+                    .auth()
+                    .signInWithPhoneNumber(
+                        fullPhone,
+                        verifier
+                    );
+
+
+            console.log(
+                'Firebase OTP sent successfully.'
+            );
+
+
+            showToast(
+                'OTP sent successfully.'
+            );
+
+
+            showOtpArea(
+                number
+            );
+
+
+        } catch (error) {
 
             console.error(
-                'reCAPTCHA reset error:',
-                recaptchaError
+                'FIREBASE OTP ERROR:',
+                error
             );
-        }
 
-        
 
-        if (recaptchaContainer) {
+            busy(
+                mobileBtn,
+                false,
+                'Send OTP'
+            );
 
-            recaptchaContainer.innerHTML ='';
+
+            let message =
+                'Unable to send OTP. Please try again.';
+
+
+            if (
+                error.message ===
+                'CSRF token not found.'
+            ) {
+
+                message =
+                    'Security token missing. Please refresh the page.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/invalid-phone-number'
+            ) {
+
+                message =
+                    'Invalid mobile number.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/too-many-requests'
+            ) {
+
+                message =
+                    'Too many attempts. Please try again later.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/captcha-check-failed'
+            ) {
+
+                message =
+                    'reCAPTCHA verification failed. Please try again.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/quota-exceeded'
+            ) {
+
+                message =
+                    'Firebase SMS limit has been exceeded.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/operation-not-allowed'
+            ) {
+
+                message =
+                    'Phone authentication is not enabled in Firebase.';
+
+            }
+
+            else if (
+                error?.code ===
+                'auth/argument-error'
+            ) {
+
+                message =
+                    'reCAPTCHA could not be initialized. Please refresh the page and try again.';
+
+            }
+
+
+            setErr(
+                'phoneErr',
+                message
+            );
+
+
+            // =================================================
+            // RESET CAPTCHA
+            // =================================================
+
+            try {
+
+                if (
+                    window.recaptchaVerifier
+                ) {
+
+                    window.recaptchaVerifier.clear();
+
+                    window.recaptchaVerifier =
+                        null;
+
+                }
+
+                window.recaptchaWidgetId =
+                    null;
+
+            } catch (recaptchaError) {
+
+                console.error(
+                    'reCAPTCHA reset error:',
+                    recaptchaError
+                );
+
+            }
+
+
+            const captchaElement =
+                document.getElementById(
+                    'recaptcha-container'
+                );
+
+
+            if (captchaElement) {
+
+                captchaElement.innerHTML =
+                    '';
+
+                captchaElement.dataset.verified =
+                    'false';
+
+            }
+
         }
 
     }
 
-}
+
     // =========================================================
-    // FIREBASE VERIFY OTP
+    // VERIFY FIREBASE MOBILE OTP
     // =========================================================
 
     async function verifyFirebaseOTP() {
@@ -1237,7 +1989,10 @@ confirmationResult =
             );
 
 
-            // Get Firebase ID Token
+            // =================================================
+            // GET FIREBASE ID TOKEN
+            // =================================================
+
             const idToken =
                 await result.user.getIdToken();
 
@@ -1256,7 +2011,6 @@ confirmationResult =
             }
 
 
-            // Create hidden Firebase token input
             let tokenInput =
                 mobileFormElement.querySelector(
                     'input[name="firebase_id_token"]'
@@ -1295,11 +2049,15 @@ confirmationResult =
             mobileBtn.textContent =
                 'Creating account...';
 
+
             mobileBtn.disabled =
                 true;
 
 
-            // Submit mobile form to Django
+            // =================================================
+            // SUBMIT TO DJANGO
+            // =================================================
+
             mobileFormElement.submit();
 
 
@@ -1323,8 +2081,7 @@ confirmationResult =
 
 
             if (
-                error &&
-                error.code ===
+                error?.code ===
                 'auth/invalid-verification-code'
             ) {
 
@@ -1333,10 +2090,8 @@ confirmationResult =
 
             }
 
-
             else if (
-                error &&
-                error.code ===
+                error?.code ===
                 'auth/code-expired'
             ) {
 
@@ -1362,24 +2117,36 @@ confirmationResult =
 
     if (mobileBtn) {
 
-    mobileBtn.addEventListener('click', async event => {
+        mobileBtn.addEventListener(
+            'click',
+            async event => {
 
-        event.preventDefault();
+                event.preventDefault();
 
-        console.log('Mobile button clicked');
 
-        if (!otpSent) {
-            await sendFirebaseOTP();
-        } else {
-            await verifyFirebaseOTP();
-        }
+                console.log(
+                    'Mobile button clicked'
+                );
 
-    });
 
-}
+                if (!otpSent) {
+
+                    await sendFirebaseOTP();
+
+                } else {
+
+                    await verifyFirebaseOTP();
+
+                }
+
+            }
+        );
+
+    }
+
 
     // =========================================================
-    // RESEND OTP
+    // RESEND MOBILE OTP
     // =========================================================
 
     if (resendButton) {
@@ -1391,7 +2158,9 @@ confirmationResult =
                 if (!phone) return;
 
 
-                if (resendButton.disabled) {
+                if (
+                    resendButton.disabled
+                ) {
 
                     return;
 
@@ -1399,13 +2168,13 @@ confirmationResult =
 
 
                 otpBoxes.forEach(box => {
-
                     box.value = '';
-
                 });
 
 
-                otpSent = false;
+                otpSent =
+                    false;
+
 
                 confirmationResult =
                     null;
@@ -1432,10 +2201,12 @@ confirmationResult =
                 const provider =
                     button.dataset.provider;
 
+
                 if (!provider) return;
 
 
-                button.disabled = true;
+                button.disabled =
+                    true;
 
 
                 const name =
@@ -1470,4 +2241,3 @@ confirmationResult =
     );
 
 })();
-

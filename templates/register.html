@@ -51,7 +51,9 @@
 
 <main class="stage">
 
-    <!-- LEFT DECORATION -->
+    <!-- =====================================================
+         LEFT DECORATION
+    ====================================================== -->
 
     <aside class="deco deco-left">
 
@@ -81,7 +83,9 @@
     </aside>
 
 
-    <!-- REGISTER CARD -->
+    <!-- =====================================================
+         REGISTER CARD
+    ====================================================== -->
 
     <section class="card" aria-labelledby="title">
 
@@ -90,17 +94,25 @@
         </h1>
 
 
+        <!-- Django Error -->
+
         {% if error %}
+
             <p class="err">
                 {{ error }}
             </p>
+
         {% endif %}
 
 
+        <!-- Django Success -->
+
         {% if success %}
+
             <p style="color: green;">
                 {{ success }}
             </p>
+
         {% endif %}
 
 
@@ -109,9 +121,9 @@
         </p>
 
 
-        <!-- =========================================
+        <!-- =================================================
              REGISTER TABS
-        ========================================== -->
+        ================================================== -->
 
         <div
             class="tabs"
@@ -147,9 +159,9 @@
         </div>
 
 
-        <!-- =========================================
+        <!-- =================================================
              EMAIL REGISTER FORM
-        ========================================== -->
+        ================================================== -->
 
         <form
             id="emailForm"
@@ -159,13 +171,18 @@
 
             {% csrf_token %}
 
+
+            <!-- REGISTER TYPE -->
+
             <input
                 type="hidden"
                 name="register_type"
                 value="email">
 
 
-            <!-- EMAIL -->
+            <!-- =================================================
+                 EMAIL
+            ================================================== -->
 
             <label class="field">
 
@@ -186,7 +203,130 @@
             </p>
 
 
-            <!-- PASSWORD -->
+            <!-- =================================================
+                 SEND EMAIL OTP
+            ================================================== -->
+
+            <button
+                class="primary"
+                type="button"
+                id="emailOtpBtn">
+
+                Send OTP
+
+            </button>
+
+
+            <!-- =================================================
+                 EMAIL OTP AREA
+            ================================================== -->
+
+            <div
+                id="emailOtpWrap"
+                class="hidden">
+
+                <p class="hint">
+
+                    Enter the 6-digit code sent to
+
+                    <b id="emailSentTo"></b>
+
+                </p>
+
+
+                <!-- OTP BOXES -->
+
+                <div
+                    class="otp"
+                    id="emailOtp">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric"
+                        autocomplete="one-time-code">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                    <input
+                        type="text"
+                        maxlength="1"
+                        inputmode="numeric">
+
+                </div>
+
+
+                <!-- EMAIL OTP ERROR -->
+
+                <p
+                    class="err"
+                    id="emailOtpErr">
+                </p>
+
+
+                <!-- =================================================
+                     EMAIL VERIFICATION STATUS
+                ================================================== -->
+
+                <input
+                    type="hidden"
+                    name="email_verified"
+                    id="email_verified"
+                    value="false">
+
+
+                <!-- =================================================
+                     RESEND EMAIL OTP
+                ================================================== -->
+
+                <button
+                    type="button"
+                    class="resend"
+                    id="emailResend"
+                    disabled>
+
+                    Resend code in 30s
+
+                </button>
+
+
+                <!-- =================================================
+                     VERIFY EMAIL OTP
+                ================================================== -->
+
+                <button
+                    class="primary"
+                    type="button"
+                    id="verifyEmailOtpBtn">
+
+                    Verify Email
+
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+                 PASSWORD
+            ================================================== -->
 
             <label class="field">
 
@@ -217,7 +357,9 @@
             </p>
 
 
-            <!-- PASSWORD STRENGTH -->
+            <!-- =================================================
+                 PASSWORD STRENGTH
+            ================================================== -->
 
             <div
                 class="meter"
@@ -231,11 +373,15 @@
             </div>
 
 
-            <!-- CREATE ACCOUNT -->
+            <!-- =================================================
+                 CREATE ACCOUNT
+            ================================================== -->
 
             <button
                 class="primary"
-                type="submit">
+                type="submit"
+                id="createEmailAccountBtn"
+                disabled>
 
                 Create Account
 
@@ -244,9 +390,9 @@
         </form>
 
 
-        <!-- =========================================
+        <!-- =====================================================
              MOBILE OTP REGISTER FORM
-        ========================================== -->
+        ====================================================== -->
 
         <form
             id="mobileForm"
@@ -255,6 +401,9 @@
             novalidate>
 
             {% csrf_token %}
+
+
+            <!-- REGISTER TYPE -->
 
             <input
                 type="hidden"
@@ -271,7 +420,9 @@
                 value="">
 
 
-            <!-- MOBILE NUMBER -->
+            <!-- =================================================
+                 MOBILE NUMBER
+            ================================================== -->
 
             <label class="field">
 
@@ -299,9 +450,9 @@
             </p>
 
 
-            <!-- =====================================
-                 OTP AREA
-            ====================================== -->
+            <!-- =================================================
+                 MOBILE OTP AREA
+            ================================================== -->
 
             <div
                 id="otpWrap"
@@ -360,6 +511,8 @@
                 </p>
 
 
+                <!-- RESEND -->
+
                 <button
                     type="button"
                     class="resend"
@@ -373,16 +526,18 @@
             </div>
 
 
-            <!-- =====================================
+            <!-- =================================================
                  FIREBASE reCAPTCHA
-            ====================================== -->
+            ================================================== -->
 
             <div
                 id="recaptcha-container">
             </div>
 
 
-            <!-- MOBILE BUTTON -->
+            <!-- =================================================
+                 MOBILE BUTTON
+            ================================================== -->
 
             <button
                 class="primary"
@@ -396,7 +551,9 @@
         </form>
 
 
-        <!-- BOTTOM -->
+        <!-- =====================================================
+             BOTTOM
+        ====================================================== -->
 
         <p class="foot">
 
@@ -411,7 +568,9 @@
     </section>
 
 
-    <!-- RIGHT STUDENT IMAGE -->
+    <!-- =====================================================
+         RIGHT STUDENT IMAGE
+    ====================================================== -->
 
     <aside class="register-illustration">
 
@@ -424,7 +583,9 @@
 </main>
 
 
-<!-- FOOTER -->
+<!-- =========================================================
+     FOOTER
+========================================================== -->
 
 <p class="copy">
 
@@ -437,7 +598,9 @@
 </p>
 
 
-<!-- TOAST -->
+<!-- =========================================================
+     TOAST
+========================================================== -->
 
 <div
     class="toast"
@@ -446,9 +609,9 @@
 </div>
 
 
-<!-- =========================================
+<!-- =========================================================
      FIREBASE
-========================================= -->
+========================================================== -->
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 
@@ -459,7 +622,8 @@
 
     var config = {
 
-        apiKey: "AIzaSyDUqBnXWMMV68NlIhp1sn2EKXB2EYPK5nI",
+        apiKey:
+            "AIzaSyDUqBnXWMMV68NlIhp1sn2EKXB2EYPK5nI",
 
         authDomain:
             "ai-placement-coach-510607.firebaseapp.com"
@@ -481,13 +645,12 @@
 </script>
 
 
-<!-- =========================================
+<!-- =========================================================
      MAIN JAVASCRIPT
-========================================= -->
+========================================================== -->
 
 <script src="{% static 'Script.JS' %}"></script>
 
 
 </body>
-
 </html>

@@ -1,13 +1,18 @@
 from django.urls import path
-from .views import register, password_reset_done
+from .views import (
+    register,
+    password_reset_done,
+    send_email_otp,
+    verify_email_otp,
+)
 from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
 
-    # ==============================
+    # =================================================
     # REGISTER
-    # ==============================
+    # =================================================
 
     path(
         "",
@@ -15,9 +20,25 @@ urlpatterns = [
         name="register"
     ),
 
-    # ==============================
+    # =================================================
+    # EMAIL OTP
+    # =================================================
+
+    path(
+        "send-email-otp/",
+        send_email_otp,
+        name="send_email_otp"
+    ),
+
+    path(
+        "verify-email-otp/",
+        verify_email_otp,
+        name="verify_email_otp"
+    ),
+
+    # =================================================
     # FORGOT PASSWORD
-    # ==============================
+    # =================================================
 
     path(
         "forgot-password/",
@@ -27,10 +48,9 @@ urlpatterns = [
         name="password_reset"
     ),
 
-    # ==============================
-    # AFTER EMAIL IS SENT
-    # CUSTOM PLACE-MATE AI PAGE
-    # ==============================
+    # =================================================
+    # AFTER PASSWORD RESET EMAIL IS SENT
+    # =================================================
 
     path(
         "forgot-password/done/",
@@ -38,9 +58,9 @@ urlpatterns = [
         name="password_reset_done"
     ),
 
-    # ==============================
+    # =================================================
     # RESET LINK FROM EMAIL
-    # ==============================
+    # =================================================
 
     path(
         "reset/<uidb64>/<token>/",
@@ -50,9 +70,9 @@ urlpatterns = [
         name="password_reset_confirm"
     ),
 
-    # ==============================
+    # =================================================
     # AFTER PASSWORD IS CHANGED
-    # ==============================
+    # =================================================
 
     path(
         "reset/done/",
@@ -61,5 +81,4 @@ urlpatterns = [
         ),
         name="password_reset_complete"
     ),
-
 ]
