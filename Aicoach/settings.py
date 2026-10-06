@@ -199,5 +199,5 @@ EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = "bhushanhyalij40@gmail.com"
 EMAIL_HOST_PASSWORD = "dvnt mufu omlh feit"
-
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

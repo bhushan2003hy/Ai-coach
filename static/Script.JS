@@ -2187,57 +2187,12 @@
 
     }
 
+// =========================================================
+// DEBUG
+// =========================================================
 
-    // =========================================================
-    // SOCIAL BUTTONS
-    // =========================================================
-
-    $$('.soc').forEach(button => {
-
-        button.addEventListener(
-            'click',
-            () => {
-
-                const provider =
-                    button.dataset.provider;
-
-
-                if (!provider) return;
-
-
-                button.disabled =
-                    true;
-
-
-                const name =
-                    provider.charAt(0).toUpperCase() +
-                    provider.slice(1);
-
-
-                showToast(
-                    `Connecting to ${name}...`
-                );
-
-
-                setTimeout(() => {
-
-                    button.disabled =
-                        false;
-
-                }, 900);
-
-            }
-        );
-
-    });
-
-
-    // =========================================================
-    // DEBUG
-    // =========================================================
-
-    console.log(
-        'PlaceMate registration Script.JS loaded successfully.'
-    );
+console.log(
+    'PlaceMate registration Script.JS loaded successfully.'
+);
 
 })();

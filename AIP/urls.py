@@ -23,6 +23,10 @@ urlpatterns = [
 
     path("check-mobile/",views.check_mobile_registered,name="check_mobile_registered"),
     
+    path("google-login/", views.google_login, name="google_login"),
+    
     path("dashboard/", views.dashboard, name="dashboard"),
+
+    path("profile/", views.profile, name="profile"),
 
 ]

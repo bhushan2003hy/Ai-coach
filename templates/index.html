@@ -656,31 +656,27 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+
+
 
 <script>
 
     var config = {
+    apiKey: "AIzaSyDUqBnXWMMV68NlIhp1sn2EKXB2EYPK5nI",
+    authDomain: "ai-placement-coach-510607.firebaseapp.com",
+    projectId: "ai-placement-coach-510607",
+    storageBucket: "ai-placement-coach-510607.firebasestorage.app",
+    messagingSenderId: "656716095633",
+    appId: "1:656716095633:web:d7cd8d225199b7daa41f30"
+};
 
-        apiKey:
-            "AIzaSyDUqBnXWMMV68NlIhp1sn2EKXB2EYPK5nI",
+if (!firebase.apps.length) {
+    firebase.initializeApp(config);
+}
 
-        authDomain:
-            "ai-placement-coach-510607.firebaseapp.com"
-
-    };
-
-
-    if (!firebase.apps.length) {
-
-        firebase.initializeApp(config);
-
-    }
-
-
-    console.log(
-        "Firebase initialized successfully."
-    );
-
+console.log("Firebase initialized successfully.");
 </script>
 
 
@@ -689,6 +685,11 @@
      MAIN JAVASCRIPT
      LOAD ONLY ONCE
 ========================================= -->
+
+
+<!-- GOOGLE / FACEBOOK AUTH -->
+
+<script src="{% static 'firebase-auth.js' %}"></script>
 
 <script src="{% static 'Script.JS' %}"></script>
 

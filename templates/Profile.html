@@ -1,1 +1,623 @@
-Tis is profile page 
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Complete Profile | PlaceMate AI</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Profile CSS -->
+    <link rel="stylesheet" href="{% static 'Profile.css' %}">
+</head>
+
+<body>
+
+    <div class="page">
+
+        <div class="container">
+
+            <!-- HEADER -->
+
+            <header class="header">
+
+                <div class="logo">
+                    PlaceMate<span>AI</span>
+                </div>
+
+                <div class="step-text">
+                    Complete your profile
+                </div>
+
+            </header>
+
+
+            <!-- PROFILE CARD -->
+
+            <main class="profile-card">
+
+
+                <!-- LEFT PANEL -->
+
+                <section class="left-panel">
+
+                    <div class="left-content">
+
+                        <div class="welcome-badge">
+                            AI Placement Coach
+                        </div>
+
+                        <h1>
+                            Build your
+                            <span>placement profile.</span>
+                        </h1>
+
+                        <p class="left-description">
+                            Tell us about yourself so PlaceMate AI
+                            can create a personalized placement
+                            preparation experience for you.
+                        </p>
+
+
+                        <!-- BENEFIT 1 -->
+
+                        <div class="benefit">
+
+                            <div class="benefit-icon">
+                                ✓
+                            </div>
+
+                            <div class="benefit-content">
+
+                                <h3>
+                                    Personalized Preparation
+                                </h3>
+
+                                <p>
+                                    Get interview questions based
+                                    on your skills and education.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BENEFIT 2 -->
+
+                        <div class="benefit">
+
+                            <div class="benefit-icon">
+                                ✦
+                            </div>
+
+                            <div class="benefit-content">
+
+                                <h3>
+                                    AI Skill Analysis
+                                </h3>
+
+                                <p>
+                                    Discover your strengths and
+                                    identify skills to improve.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BENEFIT 3 -->
+
+                        <div class="benefit">
+
+                            <div class="benefit-icon">
+                                ★
+                            </div>
+
+                            <div class="benefit-content">
+
+                                <h3>
+                                    Placement Ready
+                                </h3>
+
+                                <p>
+                                    Prepare smarter for your
+                                    upcoming placement interviews.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- RIGHT PANEL -->
+
+                <section class="right-panel">
+
+                    <div class="form-header">
+
+                        <h2>
+                            Complete your profile
+                        </h2>
+
+                        <p>
+                            This information helps us personalize
+                            your PlaceMate AI experience.
+                        </p>
+
+                    </div>
+
+
+                    <!-- PERSONAL INFORMATION -->
+
+                    <div class="form-section">
+
+                        <h3 class="section-title">
+                            Personal Information
+                        </h3>
+
+                        <div class="form-grid">
+
+
+                            <!-- FULL NAME -->
+
+                            <div class="form-group">
+
+                                <label for="fullName">
+                                    Full Name
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="fullName"
+                                    name="full_name"
+                                    placeholder="Enter your full name"
+                                    autocomplete="name"
+                                >
+
+                            </div>
+
+
+                            <!-- EMAIL -->
+
+                            <div class="form-group">
+
+                                <label for="email">
+                                    Email
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder="Your Google email"
+                                    disabled
+                                >
+
+                                <small>
+                                    Your verified Google email
+                                </small>
+
+                            </div>
+
+
+                            <!-- MOBILE -->
+
+                            <div class="form-group full-width">
+
+                                <label for="mobile">
+                                    Mobile Number
+                                    <span class="required">*</span>
+                                </label>
+
+                                <div class="mobile-input">
+
+                                    <span class="country-code">
+                                        +91
+                                    </span>
+
+                                    <input
+                                        type="tel"
+                                        id="mobile"
+                                        name="mobile"
+                                        placeholder="Enter 10 digit mobile number"
+                                        maxlength="10"
+                                        inputmode="numeric"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EDUCATION -->
+
+                    <div class="form-section">
+
+                        <h3 class="section-title">
+                            Education
+                        </h3>
+
+                        <div class="form-grid">
+
+
+                            <!-- COLLEGE -->
+
+                            <div class="form-group full-width">
+
+                                <label for="college">
+                                    College / University
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="college"
+                                    name="college"
+                                    placeholder="Enter your college or university"
+                                >
+
+                            </div>
+
+
+                            <!-- DEGREE -->
+
+                            <div class="form-group">
+
+                                <label for="degree">
+                                    Degree
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select id="degree" name="degree">
+
+                                    <option value="">
+                                        Select degree
+                                    </option>
+
+                                    <option value="BE">
+                                        B.E.
+                                    </option>
+
+                                    <option value="BTECH">
+                                        B.Tech
+                                    </option>
+
+                                    <option value="BCA">
+                                        BCA
+                                    </option>
+
+                                    <option value="BSC">
+                                        B.Sc
+                                    </option>
+
+                                    <option value="MCA">
+                                        MCA
+                                    </option>
+
+                                    <option value="MTECH">
+                                        M.Tech
+                                    </option>
+
+                                    <option value="MSC">
+                                        M.Sc
+                                    </option>
+
+                                    <option value="OTHER">
+                                        Other
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- BRANCH -->
+
+                            <div class="form-group">
+
+                                <label for="branch">
+                                    Branch / Department
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="branch"
+                                    name="branch"
+                                    placeholder="e.g. Computer Engineering"
+                                >
+
+                            </div>
+
+
+                            <!-- CURRENT YEAR -->
+
+                            <div class="form-group">
+
+                                <label for="currentYear">
+                                    Current Year
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select
+                                    id="currentYear"
+                                    name="current_year"
+                                >
+
+                                    <option value="">
+                                        Select year
+                                    </option>
+
+                                    <option value="1">
+                                        1st Year
+                                    </option>
+
+                                    <option value="2">
+                                        2nd Year
+                                    </option>
+
+                                    <option value="3">
+                                        3rd Year
+                                    </option>
+
+                                    <option value="4">
+                                        4th Year
+                                    </option>
+
+                                    <option value="graduate">
+                                        Graduate
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- GRADUATION YEAR -->
+
+                            <div class="form-group">
+
+                                <label for="graduationYear">
+                                    Graduation Year
+                                    <span class="required">*</span>
+                                </label>
+
+                                <select
+                                    id="graduationYear"
+                                    name="graduation_year"
+                                >
+
+                                    <option value="">
+                                        Select year
+                                    </option>
+
+                                    <option value="2026">
+                                        2026
+                                    </option>
+
+                                    <option value="2027">
+                                        2027
+                                    </option>
+
+                                    <option value="2028">
+                                        2028
+                                    </option>
+
+                                    <option value="2029">
+                                        2029
+                                    </option>
+
+                                    <option value="2030">
+                                        2030
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- CGPA -->
+
+                            <div class="form-group full-width">
+
+                                <label for="cgpa">
+                                    CGPA / Percentage
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="cgpa"
+                                    name="cgpa"
+                                    placeholder="e.g. 8.2 CGPA or 82%"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CAREER & SKILLS -->
+
+                    <div class="form-section">
+
+                        <h3 class="section-title">
+                            Career & Skills
+                        </h3>
+
+                        <div class="form-grid">
+
+
+                            <!-- SKILLS -->
+
+                            <div class="form-group full-width">
+
+                                <label for="skills">
+                                    Technical Skills
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="skills"
+                                    name="skills"
+                                    placeholder="Python, Django, SQL, JavaScript"
+                                >
+
+                                <small>
+                                    Separate multiple skills using commas.
+                                </small>
+
+                            </div>
+
+
+                            <!-- RESUME -->
+
+                            <div class="form-group full-width">
+
+                                <label>
+                                    Resume
+                                    <span class="optional">
+                                        Optional
+                                    </span>
+                                </label>
+
+                                <label
+                                    for="resume"
+                                    class="upload-box"
+                                >
+
+                                    <div class="upload-icon">
+                                        ↑
+                                    </div>
+
+                                    <div class="upload-content">
+
+                                        <strong>
+                                            Upload your resume
+                                        </strong>
+
+                                        <span>
+                                            PDF only · Maximum 5 MB
+                                        </span>
+
+                                    </div>
+
+                                </label>
+
+                                <input
+                                    type="file"
+                                    id="resume"
+                                    name="resume"
+                                    accept=".pdf"
+                                    hidden
+                                >
+
+                            </div>
+
+
+                            <!-- GITHUB -->
+
+                            <div class="form-group">
+
+                                <label for="github">
+                                    GitHub Profile
+                                    <span class="optional">
+                                        Optional
+                                    </span>
+                                </label>
+
+                                <input
+                                    type="url"
+                                    id="github"
+                                    name="github"
+                                    placeholder="https://github.com/username"
+                                >
+
+                            </div>
+
+
+                            <!-- LINKEDIN -->
+
+                            <div class="form-group">
+
+                                <label for="linkedin">
+                                    LinkedIn Profile
+                                    <span class="optional">
+                                        Optional
+                                    </span>
+                                </label>
+
+                                <input
+                                    type="url"
+                                    id="linkedin"
+                                    name="linkedin"
+                                    placeholder="https://linkedin.com/in/username"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- COMPLETE BUTTON -->
+
+                    <button
+                        type="button"
+                        id="completeProfileBtn"
+                        class="complete-btn"
+                    >
+                        Complete Profile
+                        <span>→</span>
+                    </button>
+
+
+                    <p class="privacy-text">
+                        Your information is securely stored and used
+                        only to personalize your PlaceMate AI experience.
+                    </p>
+
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+
+    <!-- Profile JavaScript -->
+
+    <script src="{% static 'Profile.js' %}" defer></script>
+
+</body>
+
+</html>
+

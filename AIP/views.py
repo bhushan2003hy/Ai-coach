@@ -10,6 +10,9 @@ from django.http import JsonResponse
 
 import requests
 
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
+
 
 # =========================================================
 # LOGIN PAGE
@@ -17,15 +20,7 @@ import requests
 
 def index(request):
 
-    # =====================================================
-    # POST REQUEST
-    # =====================================================
-
     if request.method == "POST":
-
-        # =================================================
-        # CHECK LOGIN TYPE
-        # =================================================
 
         login_type = request.POST.get(
             "login_type",
@@ -43,7 +38,7 @@ def index(request):
                 ""
             ).strip()
 
-            id_token = request.POST.get(
+            firebase_token = request.POST.get(
                 "firebase_id_token",
                 ""
             ).strip()
@@ -94,7 +89,7 @@ def index(request):
             # FIREBASE TOKEN REQUIRED
             # ---------------------------------------------
 
-            if not id_token:
+            if not firebase_token:
 
                 return render(
                     request,
@@ -118,7 +113,7 @@ def index(request):
                         "key": settings.FIREBASE_API_KEY
                     },
                     json={
-                        "idToken": id_token
+                        "idToken": firebase_token
                     },
                     timeout=10
                 )
@@ -211,10 +206,6 @@ def index(request):
                 phone
             )
 
-            # ---------------------------------------------
-            # GO TO DASHBOARD
-            # ---------------------------------------------
-
             return redirect("dashboard")
 
         # =================================================
@@ -303,10 +294,6 @@ def index(request):
                 "DJANGO LOGIN SUCCESS"
             )
 
-            # -----------------------------------------
-            # GO TO DASHBOARD
-            # -----------------------------------------
-
             return redirect("dashboard")
 
         # ---------------------------------------------
@@ -333,6 +320,163 @@ def index(request):
         request,
         "index.html"
     )
+
+
+# =========================================================
+# LOGIN WITH GOOGLE
+# =========================================================
+
+def google_login(request):
+
+    if request.method != "POST":
+
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Invalid request."
+            },
+            status=405
+        )
+
+    # -----------------------------------------------------
+    # GET GOOGLE ID TOKEN
+    # -----------------------------------------------------
+
+    google_token = request.POST.get(
+        "id_token",
+        ""
+    ).strip()
+
+    if not google_token:
+
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Google ID token is missing."
+            },
+            status=400
+        )
+
+    try:
+
+        # -------------------------------------------------
+        # VERIFY GOOGLE ID TOKEN
+        # -------------------------------------------------
+
+        decoded_token = google_id_token.verify_oauth2_token(
+            google_token,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID
+        )
+
+        # -------------------------------------------------
+        # GET GOOGLE USER INFORMATION
+        # -------------------------------------------------
+
+        email = decoded_token.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        name = decoded_token.get(
+            "name",
+            ""
+        ).strip()
+
+        # -------------------------------------------------
+        # CHECK EMAIL
+        # -------------------------------------------------
+
+        if not email:
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Google account email not found."
+                },
+                status=400
+            )
+
+        print(
+            "GOOGLE VERIFIED EMAIL:",
+            email
+        )
+
+        print(
+            "GOOGLE VERIFIED NAME:",
+            name
+        )
+
+        # -------------------------------------------------
+        # CHECK USER IN DJANGO DATABASE
+        # -------------------------------------------------
+
+        user = User.objects.filter(
+            email=email
+        ).first()
+
+        # =================================================
+        # EXISTING USER
+        # =================================================
+
+        if user is not None:
+
+            login(
+                request,
+                user
+            )
+
+            print(
+                "EXISTING GOOGLE USER LOGIN:",
+                email
+            )
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "redirect_url": "/dashboard/"
+                }
+            )
+
+        # =================================================
+        # NEW GOOGLE USER
+        # =================================================
+
+        request.session["google_email"] = email
+
+        request.session["google_name"] = name
+
+        print(
+            "NEW GOOGLE USER:",
+            email
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "redirect_url": "/profile/"
+            }
+        )
+
+    except Exception as e:
+
+        print(
+            "GOOGLE LOGIN ERROR TYPE:",
+            type(e).__name__
+        )
+
+        print(
+            "GOOGLE LOGIN ERROR:",
+            e
+        )
+
+        return JsonResponse(
+            {
+                "success": False,
+                "error": str(e)
+            },
+            status=401
+        )
 
 
 # =========================================================
@@ -387,6 +531,18 @@ def check_mobile_registered(request):
         {
             "registered": registered
         }
+    )
+
+
+# =========================================================
+# PROFILE
+# =========================================================
+
+def profile(request):
+
+    return render(
+        request,
+        "Profile.html"
     )
 
 

@@ -11,3 +11,5 @@ python manage.py shell
 from django.contrib.auth.models import User
 User.objects.all().delete()
 
+project-656716095633
+PlaceMate Web
