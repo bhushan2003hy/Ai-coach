@@ -446,6 +446,9 @@ def google_login(request):
 
         request.session["google_name"] = name
 
+        # Google user ke liye mobile mode false rahega
+        request.session["mobile_mode"] = False
+
         print(
             "NEW GOOGLE USER:",
             email
@@ -540,9 +543,41 @@ def check_mobile_registered(request):
 
 def profile(request):
 
+    google_email = request.session.get(
+        "google_email",
+        ""
+    )
+
+    email_verified_email = request.session.get(
+        "email_verified_email",
+        ""
+    )
+
+    google_name = request.session.get(
+        "google_name",
+        ""
+    )
+
+    # Google / Email OTP verified email
+    profile_email = (
+        google_email
+        or email_verified_email
+    )
+
+    # Mobile OTP user ke liye email manually enter hoga
+    mobile_mode = request.session.get(
+        "mobile_mode",
+        False
+    )
+
     return render(
         request,
-        "Profile.html"
+        "Profile.html",
+        {
+            "google_email": profile_email,
+            "google_name": google_name,
+            "mobile_mode": mobile_mode
+        }
     )
 
 
@@ -590,3 +625,4 @@ def contac(request):
     return HttpResponse(
         "This is Home contac"
     )
+

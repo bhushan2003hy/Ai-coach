@@ -5,6 +5,8 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.core.mail import send_mail
 
+from .models import Student, StudentProfile
+
 import requests
 import secrets
 import time
@@ -91,10 +93,6 @@ def register(request):
                 ""
             ).strip()
 
-            # ---------------------------------------------
-            # TOKEN REQUIRED
-            # ---------------------------------------------
-
             if not id_token:
 
                 return render(request, "register.html", {
@@ -144,7 +142,10 @@ def register(request):
             # CHECK FIREBASE USER
             # =================================================
 
-            users = data.get("users", [])
+            users = data.get(
+                "users",
+                []
+            )
 
             if not users:
 
@@ -188,16 +189,25 @@ def register(request):
             # LOGIN
             # =================================================
 
-            login(request, user)
+            login(
+                request,
+                user
+            )
 
-            return render(request, "Profile.html", {
-                "success": "Mobile verification successful! Account created.",
-                "otp_verified": True,
-                "phone": phone
-            })
+            return render(
+                request,
+                "Profile.html",
+                {
+                    "success": "Mobile verification successful! Account created.",
+                    "otp_verified": True,
+                    "phone": phone,
+                    "mobile_mode": True,
+                    "google_email": ""
+                }
+            )
 
         # =================================================
-        # EMAIL REGISTRATION
+        # EMAIL OTP REGISTRATION
         # =================================================
 
         email = request.POST.get(
@@ -251,7 +261,7 @@ def register(request):
         if not otp_verified:
 
             return render(request, "register.html", {
-                "error": "Please verify your email using OTP first.",
+                "error": "Please verify your email using OTP first."
             })
 
         # ---------------------------------------------
@@ -261,7 +271,7 @@ def register(request):
         if verified_email != email:
 
             return render(request, "register.html", {
-                "error": "The verified email does not match.",
+                "error": "The verified email does not match."
             })
 
         # =================================================
@@ -272,7 +282,6 @@ def register(request):
             username=email
         ).exists():
 
-            # Clear verification session
             request.session.pop(
                 "email_otp_verified",
                 None
@@ -298,7 +307,7 @@ def register(request):
         )
 
         # =================================================
-        # CLEAR EMAIL OTP VERIFICATION
+        # KEEP VERIFIED EMAIL FOR PROFILE
         # =================================================
 
         request.session.pop(
@@ -306,20 +315,28 @@ def register(request):
             None
         )
 
-        request.session.pop(
-            "email_verified_email",
-            None
-        )
+        # IMPORTANT:
+        # email_verified_email is NOT removed here.
+        # Profile page needs it.
 
         # =================================================
         # LOGIN
         # =================================================
 
-        login(request, user)
+        login(
+            request,
+            user
+        )
 
-        return render(request, "Profile.html", {
-            "success": "Email verified and account created successfully!"
-        })
+        return render(
+            request,
+            "Profile.html",
+            {
+                "success": "Email verified and account created successfully!",
+                "google_email": email,
+                "email_verified": True
+            }
+        )
 
     # =====================================================
     # GET REQUEST
@@ -407,7 +424,6 @@ def send_email_otp(request):
 
     request.session["email_otp_time"] = time.time()
 
-    # New OTP means old verification must be removed
     request.session.pop(
         "email_otp_verified",
         None
@@ -463,7 +479,6 @@ def send_email_otp(request):
             e
         )
 
-        # Remove OTP if email failed
         request.session.pop(
             "email_otp",
             None
@@ -652,6 +667,258 @@ def verify_email_otp(request):
         "success": True,
         "message": "Email verified successfully."
     })
-    
 
-    
+
+# =========================================================
+# COMPLETE PROFILE
+# =========================================================
+
+def complete_profile(request):
+
+    if request.method != "POST":
+
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request."
+        }, status=405)
+
+    # =====================================================
+    # GET PROFILE DATA
+    # =====================================================
+
+    full_name = request.POST.get(
+        "full_name",
+        ""
+    ).strip()
+
+    mobile = request.POST.get(
+        "mobile",
+        ""
+    ).strip()
+
+    college = request.POST.get(
+        "college",
+        ""
+    ).strip()
+
+    degree = request.POST.get(
+        "degree",
+        ""
+    ).strip()
+
+    branch = request.POST.get(
+        "branch",
+        ""
+    ).strip()
+
+    current_year = request.POST.get(
+        "current_year",
+        ""
+    ).strip()
+
+    graduation_year = request.POST.get(
+        "graduation_year",
+        ""
+    ).strip()
+
+    cgpa = request.POST.get(
+        "cgpa",
+        ""
+    ).strip()
+
+    skills = request.POST.get(
+        "skills",
+        ""
+    ).strip()
+
+    github = request.POST.get(
+        "github",
+        ""
+    ).strip()
+
+    linkedin = request.POST.get(
+        "linkedin",
+        ""
+    ).strip()
+
+    resume = request.FILES.get(
+        "resume"
+    )
+
+    # =====================================================
+    # BASIC REQUIRED FIELD CHECK
+    # =====================================================
+
+    required_fields = [
+        full_name,
+        mobile,
+        college,
+        degree,
+        branch,
+        current_year,
+        graduation_year,
+        cgpa,
+        skills
+    ]
+
+    if not all(required_fields):
+
+        return JsonResponse({
+            "success": False,
+            "error": "Please fill all required fields."
+        })
+
+    # =====================================================
+    # GET VERIFIED EMAIL
+    # =====================================================
+
+    # First priority: Google verified email
+    email = request.session.get(
+        "google_email",
+        ""
+    ).strip().lower()
+
+    # Second priority: Email OTP verified email
+    if not email:
+
+        email = request.session.get(
+            "email_verified_email",
+            ""
+        ).strip().lower()
+
+    # Third priority: Mobile OTP user enters email
+    if not email:
+
+        email = request.POST.get(
+            "email",
+            ""
+        ).strip().lower()
+
+    # =====================================================
+    # EMAIL REQUIRED
+    # =====================================================
+
+    if not email:
+
+        return JsonResponse({
+            "success": False,
+            "error": "Email is required."
+        })
+
+    # =====================================================
+    # CREATE STUDENT
+    # =====================================================
+
+    student = Student.objects.filter(
+        email=email
+    ).first()
+
+    if not student:
+
+        student = Student.objects.create(
+            email=email,
+            password=""
+        )
+
+    # =====================================================
+    # CREATE / UPDATE PROFILE
+    # =====================================================
+
+    profile, created = StudentProfile.objects.update_or_create(
+
+        student=student,
+
+        defaults={
+            "full_name": full_name,
+            "mobile": mobile,
+            "college": college,
+            "degree": degree,
+            "branch": branch,
+            "current_year": current_year,
+            "graduation_year": graduation_year,
+            "cgpa": cgpa,
+            "skills": skills,
+            "github": github,
+            "linkedin": linkedin,
+        }
+    )
+
+    # =====================================================
+    # RESUME
+    # =====================================================
+
+    if resume:
+
+        profile.resume = resume
+
+        profile.save()
+
+    # =====================================================
+    # LOGIN USER
+    # =====================================================
+
+    user = User.objects.filter(
+        email=email
+    ).first()
+
+    # Mobile users have username=phone and email may be empty.
+    # If no user is found by email, use the currently
+    # authenticated mobile user.
+
+    if not user and request.user.is_authenticated:
+
+        user = request.user
+
+    # If still no user, create one.
+    if not user:
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=secrets.token_urlsafe(32)
+        )
+
+    login(
+        request,
+        user
+    )
+
+    # =====================================================
+    # CLEAR USED PROFILE SESSIONS
+    # =====================================================
+
+    request.session.pop(
+        "google_email",
+        None
+    )
+
+    request.session.pop(
+        "google_name",
+        None
+    )
+
+    request.session.pop(
+        "email_verified_email",
+        None
+    )
+
+    request.session.pop(
+        "email_otp_verified",
+        None
+    )
+
+    print(
+        "PROFILE SAVED AND USER LOGGED IN:",
+        email
+    )
+
+    # =====================================================
+    # SUCCESS
+    # =====================================================
+
+    return JsonResponse({
+        "success": True,
+        "message": "Profile saved successfully.",
+        "redirect_url": "/dashboard/"
+    })
+

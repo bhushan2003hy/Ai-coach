@@ -328,9 +328,166 @@ document.addEventListener("DOMContentLoaded", function () {
                 ------------------------------
                 */
 
-                alert(
-                    "Profile information is valid. Database connection will be added in the next step."
+
+                /*
+                ------------------------------
+                SEND PROFILE TO DJANGO
+                ------------------------------
+                */
+
+                const formData = new FormData();
+
+                formData.append(
+                    "full_name",
+                    getValue("fullName")
                 );
+
+                formData.append(
+                    "mobile",
+                    getValue("mobile")
+                );
+
+                formData.append(
+                    "college",
+                    getValue("college")
+                );
+
+                formData.append(
+                    "degree",
+                    getValue("degree")
+                );
+
+                formData.append(
+                    "branch",
+                    getValue("branch")
+                );
+
+                formData.append(
+                    "current_year",
+                    getValue("currentYear")
+                );
+
+                formData.append(
+                    "graduation_year",
+                    getValue("graduationYear")
+                );
+
+                formData.append(
+                    "cgpa",
+                    getValue("cgpa")
+                );
+
+                formData.append(
+                    "skills",
+                    getValue("skills")
+                );
+                formData.append(
+                    "email",
+                    getValue("email"));
+
+
+                // Optional fields
+
+                formData.append(
+                    "github",
+                    getValue("github")
+                );
+
+                formData.append(
+                    "linkedin",
+                    getValue("linkedin")
+                );
+
+
+                // Resume
+
+                if (
+                    resumeInput &&
+                    resumeInput.files.length > 0
+                ) {
+
+                    formData.append(
+                        "resume",
+                        resumeInput.files[0]
+                    );
+                }
+
+
+                // CSRF TOKEN
+
+                const csrfToken =
+                    document.querySelector(
+                        '[name=csrfmiddlewaretoken]'
+                    );
+
+                if (!csrfToken) {
+
+                    alert(
+                        "CSRF token not found."
+                    );
+
+                    return;
+                }
+
+
+                // SEND REQUEST
+
+                fetch(
+                    "/complete-profile/",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "X-CSRFToken":
+                                csrfToken.value
+                        },
+
+                        body: formData
+                    }
+                )
+
+                    .then(function (response) {
+
+                        return response.json();
+
+                    })
+
+                    .then(function (data) {
+
+                        console.log(
+                            "COMPLETE PROFILE RESPONSE:",
+                            data
+                        );
+
+                        if (data.success) {
+
+                            alert(data.message);
+                            window.location.href = data.redirect_url;
+
+                        } else {
+
+                            alert(
+                                data.error ||
+                                "Unable to save profile."
+                            );
+
+                        }
+
+                    })
+
+                    .catch(function (error) {
+
+                        console.error(
+                            "PROFILE SUBMIT ERROR:",
+                            error
+                        );
+
+                        alert(
+                            "Something went wrong while saving your profile."
+                        );
+
+                    });
+
 
             }
         );

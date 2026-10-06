@@ -1,17 +1,21 @@
-
 {% load static %}
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Complete Profile | PlaceMate AI</title>
 
     <!-- Google Fonts -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
@@ -20,10 +24,14 @@
     >
 
     <!-- Profile CSS -->
+
     <link rel="stylesheet" href="{% static 'Profile.css' %}">
+
 </head>
 
 <body>
+
+{% csrf_token %}
 
     <div class="page">
 
@@ -34,11 +42,15 @@
             <header class="header">
 
                 <div class="logo">
+
                     PlaceMate<span>AI</span>
+
                 </div>
 
                 <div class="step-text">
+
                     Complete your profile
+
                 </div>
 
             </header>
@@ -56,18 +68,27 @@
                     <div class="left-content">
 
                         <div class="welcome-badge">
+
                             AI Placement Coach
+
                         </div>
 
                         <h1>
+
                             Build your
+
                             <span>placement profile.</span>
+
                         </h1>
 
                         <p class="left-description">
+
                             Tell us about yourself so PlaceMate AI
+
                             can create a personalized placement
+
                             preparation experience for you.
+
                         </p>
 
 
@@ -76,18 +97,25 @@
                         <div class="benefit">
 
                             <div class="benefit-icon">
+
                                 ✓
+
                             </div>
 
                             <div class="benefit-content">
 
                                 <h3>
+
                                     Personalized Preparation
+
                                 </h3>
 
                                 <p>
+
                                     Get interview questions based
+
                                     on your skills and education.
+
                                 </p>
 
                             </div>
@@ -100,18 +128,25 @@
                         <div class="benefit">
 
                             <div class="benefit-icon">
+
                                 ✦
+
                             </div>
 
                             <div class="benefit-content">
 
                                 <h3>
+
                                     AI Skill Analysis
+
                                 </h3>
 
                                 <p>
+
                                     Discover your strengths and
+
                                     identify skills to improve.
+
                                 </p>
 
                             </div>
@@ -124,18 +159,25 @@
                         <div class="benefit">
 
                             <div class="benefit-icon">
+
                                 ★
+
                             </div>
 
                             <div class="benefit-content">
 
                                 <h3>
+
                                     Placement Ready
+
                                 </h3>
 
                                 <p>
+
                                     Prepare smarter for your
+
                                     upcoming placement interviews.
+
                                 </p>
 
                             </div>
@@ -154,12 +196,17 @@
                     <div class="form-header">
 
                         <h2>
+
                             Complete your profile
+
                         </h2>
 
                         <p>
+
                             This information helps us personalize
+
                             your PlaceMate AI experience.
+
                         </p>
 
                     </div>
@@ -170,7 +217,9 @@
                     <div class="form-section">
 
                         <h3 class="section-title">
+
                             Personal Information
+
                         </h3>
 
                         <div class="form-grid">
@@ -181,8 +230,11 @@
                             <div class="form-group">
 
                                 <label for="fullName">
+
                                     Full Name
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -201,19 +253,32 @@
                             <div class="form-group">
 
                                 <label for="email">
+
                                     Email
+
                                 </label>
 
                                 <input
                                     type="email"
                                     id="email"
                                     name="email"
-                                    placeholder="Your Google email"
-                                    disabled
+                                    placeholder="{% if mobile_mode %}Enter your email address{% else %}Your verified email{% endif %}"
+                                    value="{{ google_email }}"
+                                    {% if not mobile_mode %}disabled{% endif %}
                                 >
 
                                 <small>
-                                    Your verified Google email
+
+                                    {% if mobile_mode %}
+
+                                        Enter your email address.
+
+                                    {% else %}
+
+                                        Your verified email
+
+                                    {% endif %}
+
                                 </small>
 
                             </div>
@@ -224,14 +289,19 @@
                             <div class="form-group full-width">
 
                                 <label for="mobile">
+
                                     Mobile Number
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <div class="mobile-input">
 
                                     <span class="country-code">
+
                                         +91
+
                                     </span>
 
                                     <input
@@ -257,7 +327,9 @@
                     <div class="form-section">
 
                         <h3 class="section-title">
+
                             Education
+
                         </h3>
 
                         <div class="form-grid">
@@ -268,8 +340,11 @@
                             <div class="form-group full-width">
 
                                 <label for="college">
+
                                     College / University
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -287,46 +362,67 @@
                             <div class="form-group">
 
                                 <label for="degree">
+
                                     Degree
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <select id="degree" name="degree">
 
                                     <option value="">
+
                                         Select degree
+
                                     </option>
 
                                     <option value="BE">
+
                                         B.E.
+
                                     </option>
 
                                     <option value="BTECH">
+
                                         B.Tech
+
                                     </option>
 
                                     <option value="BCA">
+
                                         BCA
+
                                     </option>
 
                                     <option value="BSC">
+
                                         B.Sc
+
                                     </option>
 
                                     <option value="MCA">
+
                                         MCA
+
                                     </option>
 
                                     <option value="MTECH">
+
                                         M.Tech
+
                                     </option>
 
                                     <option value="MSC">
+
                                         M.Sc
+
                                     </option>
 
                                     <option value="OTHER">
+
                                         Other
+
                                     </option>
 
                                 </select>
@@ -339,8 +435,11 @@
                             <div class="form-group">
 
                                 <label for="branch">
+
                                     Branch / Department
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -358,8 +457,11 @@
                             <div class="form-group">
 
                                 <label for="currentYear">
+
                                     Current Year
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <select
@@ -368,27 +470,39 @@
                                 >
 
                                     <option value="">
+
                                         Select year
+
                                     </option>
 
                                     <option value="1">
+
                                         1st Year
+
                                     </option>
 
                                     <option value="2">
+
                                         2nd Year
+
                                     </option>
 
                                     <option value="3">
+
                                         3rd Year
+
                                     </option>
 
                                     <option value="4">
+
                                         4th Year
+
                                     </option>
 
                                     <option value="graduate">
+
                                         Graduate
+
                                     </option>
 
                                 </select>
@@ -401,8 +515,11 @@
                             <div class="form-group">
 
                                 <label for="graduationYear">
+
                                     Graduation Year
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <select
@@ -411,27 +528,39 @@
                                 >
 
                                     <option value="">
+
                                         Select year
+
                                     </option>
 
                                     <option value="2026">
+
                                         2026
+
                                     </option>
 
                                     <option value="2027">
+
                                         2027
+
                                     </option>
 
                                     <option value="2028">
+
                                         2028
+
                                     </option>
 
                                     <option value="2029">
+
                                         2029
+
                                     </option>
 
                                     <option value="2030">
+
                                         2030
+
                                     </option>
 
                                 </select>
@@ -444,8 +573,11 @@
                             <div class="form-group full-width">
 
                                 <label for="cgpa">
+
                                     CGPA / Percentage
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -467,7 +599,9 @@
                     <div class="form-section">
 
                         <h3 class="section-title">
+
                             Career & Skills
+
                         </h3>
 
                         <div class="form-grid">
@@ -478,8 +612,11 @@
                             <div class="form-group full-width">
 
                                 <label for="skills">
+
                                     Technical Skills
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -490,7 +627,9 @@
                                 >
 
                                 <small>
+
                                     Separate multiple skills using commas.
+
                                 </small>
 
                             </div>
@@ -501,10 +640,15 @@
                             <div class="form-group full-width">
 
                                 <label>
+
                                     Resume
+
                                     <span class="optional">
+
                                         Optional
+
                                     </span>
+
                                 </label>
 
                                 <label
@@ -513,17 +657,23 @@
                                 >
 
                                     <div class="upload-icon">
+
                                         ↑
+
                                     </div>
 
                                     <div class="upload-content">
 
                                         <strong>
+
                                             Upload your resume
+
                                         </strong>
 
                                         <span>
+
                                             PDF only · Maximum 5 MB
+
                                         </span>
 
                                     </div>
@@ -546,10 +696,15 @@
                             <div class="form-group">
 
                                 <label for="github">
+
                                     GitHub Profile
+
                                     <span class="optional">
+
                                         Optional
+
                                     </span>
+
                                 </label>
 
                                 <input
@@ -567,10 +722,15 @@
                             <div class="form-group">
 
                                 <label for="linkedin">
+
                                     LinkedIn Profile
+
                                     <span class="optional">
+
                                         Optional
+
                                     </span>
+
                                 </label>
 
                                 <input
@@ -594,14 +754,20 @@
                         id="completeProfileBtn"
                         class="complete-btn"
                     >
+
                         Complete Profile
+
                         <span>→</span>
+
                     </button>
 
 
                     <p class="privacy-text">
+
                         Your information is securely stored and used
+
                         only to personalize your PlaceMate AI experience.
+
                     </p>
 
                 </section>

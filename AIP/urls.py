@@ -1,15 +1,8 @@
-# from django.contrib import admin
-# from django.urls import path
-# from AIP import views
-
-# urlpatterns = [
-#     path("",views.index,name='Login Page'),
-#     path("about",views.about,name='about'),
-#     path("contac",views.contac,name='contac')
-# ]
 from django.contrib import admin
 from django.urls import path, include
 from AIP import views
+from accounts import views as accounts_views
+
 
 urlpatterns = [
 
@@ -28,5 +21,9 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
 
     path("profile/", views.profile, name="profile"),
+
+    path("complete-profile/",accounts_views.complete_profile,name="complete_profile"),
+
+
 
 ]

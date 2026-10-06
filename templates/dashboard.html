@@ -1,19 +1,267 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Dashboard | PlaceMate AI</title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'dashboard.css' %}"
+    >
+
 </head>
 
 <body>
 
-    <h1>Welcome to PlaceMate AI 🎉</h1>
+    <!-- ================= HEADER ================= -->
 
-    <p>Login successful.</p>
+    <header class="topbar">
 
-    <p>You are now logged in.</p>
+        <div class="brand">
+            PlaceMate<span>AI</span>
+        </div>
+
+        <div class="topbar-right">
+
+            <!-- Profile Button -->
+            <button
+                class="profile-btn"
+                id="profileBtn"
+                type="button"
+                aria-label="Open profile"
+            >
+                <span class="profile-avatar">B</span>
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= PROFILE PANEL ================= -->
+
+    <div
+        class="profile-panel"
+        id="profilePanel"
+    >
+
+        <div class="profile-header">
+
+            <div class="large-avatar">
+                B
+            </div>
+
+            <div>
+
+                <h3 id="profileName">
+                    Bhushan Hyalij
+                </h3>
+
+                <p id="profileEmail">
+                    bhushanhyalij40@gmail.com
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="profile-divider"></div>
+
+
+        <div class="account-info">
+
+            <div class="info-item">
+                <span class="info-label">📱 Mobile</span>
+                <span id="profileMobile">Not added</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">🎓 College</span>
+                <span id="profileCollege">Not added</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">💻 Branch</span>
+                <span id="profileBranch">Not added</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">📚 Degree</span>
+                <span id="profileDegree">Not added</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">📊 CGPA</span>
+                <span id="profileCgpa">Not added</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">🎯 Graduation</span>
+                <span id="profileGraduation">Not added</span>
+            </div>
+
+        </div>
+
+
+        <div class="profile-actions">
+
+            <button
+                class="profile-action-btn"
+                type="button"
+            >
+                ⚙️ Profile Settings
+            </button>
+
+            <button
+                class="logout-btn"
+                id="logoutBtn"
+                type="button"
+            >
+                🚪 Logout
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= MAIN DASHBOARD ================= -->
+
+    <main class="dashboard">
+
+        <section class="welcome-section">
+
+            <div>
+
+                <p class="small-heading">
+                    AI PLACEMENT COACH
+                </p>
+
+                <h1>
+                    Welcome to your
+                    <span>Placement Dashboard</span>
+                </h1>
+
+                <p class="welcome-text">
+                    Prepare smarter, improve your skills,
+                    and get placement-ready with PlaceMate AI.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= FEATURE CARDS ================= -->
+
+        <section class="features">
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🎤
+                </div>
+
+                <h2>
+                    Mock Interview
+                </h2>
+
+                <p>
+                    Practice real interview questions
+                    with your AI placement coach.
+                </p>
+
+                <button type="button">
+                    Start Interview
+                </button>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🧠
+                </div>
+
+                <h2>
+                    Technical Preparation
+                </h2>
+
+                <p>
+                    Improve your programming and
+                    technical interview skills.
+                </p>
+
+                <button type="button">
+                    Start Preparing
+                </button>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    📊
+                </div>
+
+                <h2>
+                    Skill Analysis
+                </h2>
+
+                <p>
+                    Analyze your skills and discover
+                    areas that need improvement.
+                </p>
+
+                <button type="button">
+                    Analyze Skills
+                </button>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    📄
+                </div>
+
+                <h2>
+                    Resume Analysis
+                </h2>
+
+                <p>
+                    Get AI-powered suggestions to
+                    improve your resume.
+                </p>
+
+                <button type="button">
+                    Analyze Resume
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="{% static 'Dashboard.js' %}"></script>
 
 </body>
+
 </html>
+
