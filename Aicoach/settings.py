@@ -43,7 +43,11 @@ SECRET_KEY = 'django-insecure-u=l!a3*^wm(h9uja_lr1zq_hl)rpgzvcszv*d+n#$02!d+f4t2
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "ai-coach-production-7d85.up.railway.app",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # ==================================================
