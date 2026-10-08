@@ -120,22 +120,34 @@ WSGI_APPLICATION = 'Aicoach.wsgi.application'
 # DATABASE
 # ==================================================
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+
+#         'NAME': 'aicoach_db',
+
+#         'USER': 'root',
+
+#         'PASSWORD': 'Bhushan@2003',
+
+#         'HOST': 'localhost',
+
+#         'PORT': '3306',
+#     }
+# }
+
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-
-        'NAME': 'aicoach_db',
-
-        'USER': 'root',
-
-        'PASSWORD': 'Bhushan@2003',
-
-        'HOST': 'localhost',
-
-        'PORT': '3306',
+        'NAME': os.environ.get('MYSQLDATABASE'),
+        'USER': os.environ.get('MYSQLUSER'),
+        'PASSWORD': os.environ.get('MYSQLPASSWORD'),
+        'HOST': os.environ.get('MYSQLHOST'),
+        'PORT': os.environ.get('MYSQLPORT', '3306'),
     }
 }
-
 
 # ==================================================
 # PASSWORD VALIDATION
