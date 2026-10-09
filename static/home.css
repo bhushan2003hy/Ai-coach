@@ -9,15 +9,7 @@
 }
 
 :root {
-    /* --primary: #635bff;
-    --primary-dark: #5149e5;
-    --text: #18202f;
-    --muted: #687386;
-    --border: #dfe3ea;
-    --background: #f5f7fb;
-    --white: #ffffff;
-    --purple-soft: #eeedff;
-    --purple-light: #dcd9ff;  */
+   
 
     --primary: #FFBF73;
     --primary-dark: #F5A94F;
@@ -67,7 +59,7 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 25px;
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(244, 239, 228, 0.97);
     border-bottom: 1px solid var(--border);
 }
 
@@ -209,7 +201,7 @@ input {
     background: var(--primary-dark);
     border-color: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 11px 25px rgba(99, 91, 255, 0.24);
+    box-shadow: 0 11px 25px rgba(245, 169, 79, 0.24);
 }
 
 .primary-btn span {
@@ -254,7 +246,7 @@ input {
     width: 310px;
     height: 310px;
     border-radius: 50%;
-    background: #e5e3ff;
+    background: #FFE0B2;
     filter: blur(5px);
 }
 
@@ -481,7 +473,7 @@ input {
 
 .feature-card:hover {
     transform: translateY(-4px);
-    border-color: #c9c5ff;
+    border-color: #FFBF73;;
     box-shadow: 0 15px 35px rgba(35, 38, 70, 0.07);
 }
 
@@ -497,13 +489,19 @@ input {
 }
 
 .feature-icon.purple {
-    color: var(--primary);
-    background: var(--purple-soft);
+    /* color: var(--primary);
+    background: var(--purple-soft); */
+
+    color: #B87526;
+    background: #FFF0D9;
 }
 
 .feature-icon.blue {
-    color: #2774d8;
-    background: #eaf3ff;
+    /* color: #2774d8;
+    background: #eaf3ff; */
+
+    color: #17172F;
+    background: #EDE6D8;
 }
 
 .feature-icon.green {
@@ -572,14 +570,18 @@ input {
 ======================================== */
 
 .cta {
-    margin: 0 7% 75px;
+    /* margin: 0 7% 75px;
     padding: 55px 25px;
     text-align: center;
     border: 1px solid #e4e1ff;
     border-radius: 22px;
     background: linear-gradient(145deg, #665df5, #5047d8);
     color: var(--white);
-    box-shadow: 0 18px 40px rgba(80, 71, 216, 0.12);
+    box-shadow: 0 18px 40px rgba(80, 71, 216, 0.12); */
+border: 1px solid #E6DECE;
+background: linear-gradient(145deg, #FFBF73, #F5A94F);
+color: #17172F;
+box-shadow: 0 18px 40px rgba(245, 169, 79, 0.18);
 }
 
 .cta h2 {
@@ -588,16 +590,22 @@ input {
 }
 
 .cta p {
-    margin: 13px 0 23px;
+    /* margin: 13px 0 23px;
     color: rgba(255, 255, 255, 0.82);
-    font-size: 14px;
+    font-size: 14px; */
+    color: rgba(23, 23, 47, 0.78);
 }
 
 .cta .primary-btn {
-    background: var(--white);
+    /* background: var(--white);
     color: var(--primary);
     border-color: var(--white);
-    box-shadow: none;
+    box-shadow: none; */
+
+background: #FFFCF7;
+color: #17172F;
+border-color: #FFFCF7;
+box-shadow: none;
 }
 
 .cta .primary-btn:hover {
