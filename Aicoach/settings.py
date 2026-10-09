@@ -210,15 +210,18 @@ STATICFILES_DIRS = [
 # =========================================================
 # EMAIL OTP SETTINGS
 # =========================================================
+# EMAIL OTP SETTINGS
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST = "smtp-relay.brevo.com"
 EMAIL_PORT = 587
-
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = "bhushanhyalij40@gmail.com"
-EMAIL_HOST_PASSWORD = "dvnt mufu omlh feit"
+EMAIL_HOST_USER = "bd5d83001@smtp-brevo.com"
+EMAIL_HOST_PASSWORD = os.getenv("BREVO_SMTP_KEY")
+
+DEFAULT_FROM_EMAIL = "bhushanhyalij40@gmail.com"
+
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
