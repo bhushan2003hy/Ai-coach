@@ -14,6 +14,16 @@ from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
 
+
+
+# HOME / LANDING PAGE
+
+def home(request):
+    return render(request, "home.html")
+
+
+
+
 # =========================================================
 # LOGIN PAGE
 # =========================================================

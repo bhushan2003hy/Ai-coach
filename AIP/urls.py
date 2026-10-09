@@ -6,7 +6,9 @@ from accounts import views as accounts_views
 
 urlpatterns = [
 
-    path("", views.index, name="Login Page"),
+    path("", views.home, name="home"),
+
+    path("login", views.index, name="Login Page"),
 
     path("about", views.about, name="about"),
 
