@@ -1,4 +1,3 @@
-
 /* ========================================
    PLACEMATE AI — PROFILE MATCHING THEME
 ======================================== */
@@ -10,7 +9,7 @@
 }
 
 :root {
-    --primary: #635bff;
+    /* --primary: #635bff;
     --primary-dark: #5149e5;
     --text: #18202f;
     --muted: #687386;
@@ -18,7 +17,20 @@
     --background: #f5f7fb;
     --white: #ffffff;
     --purple-soft: #eeedff;
-    --purple-light: #dcd9ff;
+    --purple-light: #dcd9ff;  */
+
+    --primary: #FFBF73;
+    --primary-dark: #F5A94F;
+    --text: #17172F;
+    --muted: #716D80;
+    --border: #E6DECE;
+    --background: #F4EFE4;
+    --white: #FFFCF7;
+    --purple-soft: #FFF0D9;
+    --purple-light: #FFE0B2;
+
+
+
 }
 
 html {
@@ -154,7 +166,7 @@ input {
     color: var(--primary);
 }
 
-.hero-content > p {
+.hero-content>p {
     max-width: 530px;
     color: var(--muted);
     font-size: 16px;
@@ -299,12 +311,10 @@ input {
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: conic-gradient(
-        var(--primary) 0deg,
-        #a7a2ff 240deg,
-        #eeedff 240deg,
-        #eeedff 360deg
-    );
+    background: conic-gradient(var(--primary) 0deg,
+            #a7a2ff 240deg,
+            #eeedff 240deg,
+            #eeedff 360deg);
 }
 
 .circle-inner {
@@ -550,7 +560,7 @@ input {
     margin-top: 12px;
 }
 
-.about > p {
+.about>p {
     color: var(--muted);
     font-size: 14px;
     line-height: 1.9;
@@ -644,7 +654,7 @@ footer p {
         text-align: center;
     }
 
-    .hero-content > p {
+    .hero-content>p {
         margin: auto;
     }
 
@@ -709,7 +719,7 @@ footer p {
         letter-spacing: -1.8px;
     }
 
-    .hero-content > p {
+    .hero-content>p {
         font-size: 14px;
     }
 
@@ -821,4 +831,3 @@ footer p {
         transform: none;
     }
 }
-
