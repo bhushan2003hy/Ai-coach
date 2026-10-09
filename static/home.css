@@ -1,7 +1,7 @@
-```css
-/* ==============================
-   RESET & VARIABLES
-================================ */
+
+/* ========================================
+   PLACEMATE AI — PROFILE MATCHING THEME
+======================================== */
 
 * {
     margin: 0;
@@ -11,12 +11,14 @@
 
 :root {
     --primary: #635bff;
-    --primary-dark: #5047df;
+    --primary-dark: #5149e5;
     --text: #18202f;
-    --muted: #737d90;
-    --border: #e7e9f0;
-    --background: #f7f8fc;
+    --muted: #687386;
+    --border: #dfe3ea;
+    --background: #f5f7fb;
     --white: #ffffff;
+    --purple-soft: #eeedff;
+    --purple-light: #dcd9ff;
 }
 
 html {
@@ -42,9 +44,9 @@ input {
 }
 
 
-/* ==============================
+/* ========================================
    NAVBAR
-================================ */
+======================================== */
 
 .navbar {
     min-height: 82px;
@@ -53,7 +55,7 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 25px;
-    background: rgba(255, 255, 255, 0.96);
+    background: rgba(255, 255, 255, 0.97);
     border-bottom: 1px solid var(--border);
 }
 
@@ -76,7 +78,7 @@ input {
 }
 
 .navbar nav a {
-    color: #5f687a;
+    color: #596273;
     font-size: 14px;
     font-weight: 600;
     transition: color 0.2s ease;
@@ -87,31 +89,35 @@ input {
 }
 
 .login-btn {
-    border: 1px solid #dcd9ff;
-    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px 21px;
+    border: 1px solid #dcd9ff;
     border-radius: 10px;
+    background: var(--white);
+    color: var(--primary);
     font-size: 14px;
     font-weight: 700;
-    background: white;
     white-space: nowrap;
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .login-btn:hover {
-    background: #f0efff;
-    transform: translateY(-1px);
+    background: var(--purple-soft);
+    border-color: var(--primary);
+    transform: translateY(-2px);
 }
 
 
-/* ==============================
+/* ========================================
    HERO SECTION
-================================ */
+======================================== */
 
 .hero {
     max-width: 1200px;
     margin: auto;
-    padding: 95px 35px 100px;
+    padding: 85px 35px 95px;
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
     align-items: center;
@@ -130,7 +136,7 @@ input {
     margin-bottom: 24px;
     border: 1px solid #e1deff;
     border-radius: 30px;
-    background: #f0efff;
+    background: var(--purple-soft);
     color: var(--primary);
     font-size: 12px;
     font-weight: 700;
@@ -182,12 +188,14 @@ input {
 
 .primary-btn {
     background: var(--primary);
-    color: white;
+    color: var(--white);
+    border: 1px solid var(--primary);
     box-shadow: 0 8px 22px rgba(99, 91, 255, 0.18);
 }
 
 .primary-btn:hover {
     background: var(--primary-dark);
+    border-color: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: 0 11px 25px rgba(99, 91, 255, 0.24);
 }
@@ -197,13 +205,14 @@ input {
 }
 
 .secondary-btn {
-    background: white;
+    background: var(--white);
     border: 1px solid var(--border);
     color: var(--text);
 }
 
 .secondary-btn:hover {
     border-color: var(--primary);
+    background: #faf9ff;
     color: var(--primary);
     transform: translateY(-2px);
 }
@@ -215,9 +224,9 @@ input {
 }
 
 
-/* ==============================
+/* ========================================
    HERO VISUAL CARD
-================================ */
+======================================== */
 
 .hero-visual {
     min-height: 390px;
@@ -233,7 +242,7 @@ input {
     width: 310px;
     height: 310px;
     border-radius: 50%;
-    background: #e9e7ff;
+    background: #e5e3ff;
     filter: blur(5px);
 }
 
@@ -242,10 +251,10 @@ input {
     z-index: 1;
     width: min(100%, 390px);
     padding: 28px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 23px;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 25px 65px rgba(45, 43, 100, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 22px;
+    background: var(--white);
+    box-shadow: 0 18px 50px rgba(20, 30, 55, 0.10);
 }
 
 .visual-top {
@@ -275,7 +284,7 @@ input {
     height: 38px;
     flex-shrink: 0;
     border-radius: 12px;
-    background: #eeedff;
+    background: var(--purple-soft);
     color: var(--primary);
     font-size: 22px;
 }
@@ -302,7 +311,7 @@ input {
     width: 122px;
     height: 122px;
     border-radius: 50%;
-    background: white;
+    background: var(--white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -332,7 +341,8 @@ input {
     gap: 12px;
     padding: 14px;
     border: 1px solid #ececf3;
-    border-radius: 13px;
+    border-radius: 12px;
+    background: #fcfcff;
 }
 
 .check-icon {
@@ -382,7 +392,7 @@ input {
     gap: 9px;
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: white;
+    background: var(--white);
     box-shadow: 0 12px 30px rgba(35, 38, 70, 0.09);
     font-size: 12px;
     font-weight: 700;
@@ -394,13 +404,13 @@ input {
 }
 
 
-/* ==============================
+/* ========================================
    FEATURES SECTION
-================================ */
+======================================== */
 
 .features {
     padding: 85px 7%;
-    background: white;
+    background: var(--white);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
 }
@@ -451,7 +461,8 @@ input {
     padding: 27px;
     border: 1px solid var(--border);
     border-radius: 17px;
-    background: white;
+    background: var(--white);
+    box-shadow: 0 8px 25px rgba(20, 30, 55, 0.025);
     transition:
         transform 0.25s ease,
         border-color 0.25s ease,
@@ -461,7 +472,7 @@ input {
 .feature-card:hover {
     transform: translateY(-4px);
     border-color: #c9c5ff;
-    box-shadow: 0 15px 35px rgba(35, 38, 70, 0.06);
+    box-shadow: 0 15px 35px rgba(35, 38, 70, 0.07);
 }
 
 .feature-icon {
@@ -476,8 +487,8 @@ input {
 }
 
 .feature-icon.purple {
-    color: #635bff;
-    background: #eeedff;
+    color: var(--primary);
+    background: var(--purple-soft);
 }
 
 .feature-icon.blue {
@@ -503,7 +514,7 @@ input {
 }
 
 
-/* FEATURE REVEAL ANIMATION */
+/* FEATURE REVEAL — home.js compatible */
 
 .feature-card.reveal {
     opacity: 0;
@@ -521,9 +532,9 @@ input {
 }
 
 
-/* ==============================
+/* ========================================
    ABOUT SECTION
-================================ */
+======================================== */
 
 .about {
     max-width: 1100px;
@@ -546,17 +557,19 @@ input {
 }
 
 
-/* ==============================
+/* ========================================
    CALL TO ACTION
-================================ */
+======================================== */
 
 .cta {
     margin: 0 7% 75px;
     padding: 55px 25px;
     text-align: center;
     border: 1px solid #e4e1ff;
-    border-radius: 23px;
-    background: linear-gradient(135deg, #efeeff, #f7f6ff);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #665df5, #5047d8);
+    color: var(--white);
+    box-shadow: 0 18px 40px rgba(80, 71, 216, 0.12);
 }
 
 .cta h2 {
@@ -566,14 +579,26 @@ input {
 
 .cta p {
     margin: 13px 0 23px;
-    color: var(--muted);
+    color: rgba(255, 255, 255, 0.82);
     font-size: 14px;
 }
 
+.cta .primary-btn {
+    background: var(--white);
+    color: var(--primary);
+    border-color: var(--white);
+    box-shadow: none;
+}
 
-/* ==============================
+.cta .primary-btn:hover {
+    background: var(--purple-soft);
+    color: var(--primary-dark);
+}
+
+
+/* ========================================
    FOOTER
-================================ */
+======================================== */
 
 footer {
     display: flex;
@@ -582,7 +607,7 @@ footer {
     align-items: center;
     gap: 15px;
     padding: 25px 7%;
-    background: white;
+    background: var(--white);
     border-top: 1px solid var(--border);
 }
 
@@ -596,9 +621,9 @@ footer p {
 }
 
 
-/* ==============================
+/* ========================================
    TABLET RESPONSIVE
-================================ */
+======================================== */
 
 @media (max-width: 850px) {
     .navbar {
@@ -645,9 +670,9 @@ footer p {
 }
 
 
-/* ==============================
+/* ========================================
    MOBILE RESPONSIVE
-================================ */
+======================================== */
 
 @media (max-width: 520px) {
     .navbar {
@@ -743,9 +768,9 @@ footer p {
 }
 
 
-/* ==============================
+/* ========================================
    VERY SMALL SCREENS
-================================ */
+======================================== */
 
 @media (max-width: 360px) {
     .navbar nav {
@@ -774,9 +799,9 @@ footer p {
 }
 
 
-/* ==============================
+/* ========================================
    REDUCED MOTION ACCESSIBILITY
-================================ */
+======================================== */
 
 @media (prefers-reduced-motion: reduce) {
     html {
@@ -796,4 +821,4 @@ footer p {
         transform: none;
     }
 }
-```
+
