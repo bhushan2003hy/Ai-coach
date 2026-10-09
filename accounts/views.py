@@ -438,34 +438,53 @@ def send_email_otp(request):
     # SEND EMAIL
     # =====================================================
 
+    
+    # =====================================================
+    # SEND EMAIL USING BREVO API
+    # =====================================================
+
     try:
 
-        send_mail(
+        if not settings.BREVO_API_KEY:
+            raise Exception("BREVO_API_KEY is not configured")
 
-            subject="PlaceMate AI - Email Verification OTP",
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
 
-            message=(
-                f"Your PlaceMate AI verification OTP is: {otp}\n\n"
-                "This OTP is valid for 5 minutes.\n"
-                "Do not share this OTP with anyone."
-            ),
+            headers={
+                "accept": "application/json",
+                "api-key": settings.BREVO_API_KEY,
+                "content-type": "application/json",
+            },
 
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            json={
+                "sender": {
+                    "name": "PlaceMate AI",
+                    "email": settings.DEFAULT_FROM_EMAIL,
+                },
 
-            recipient_list=[email],
+                "to": [
+                    {"email": email}
+                ],
 
-            fail_silently=False
+                "subject": "PlaceMate AI - Email Verification OTP",
+
+                "textContent": (
+                    f"Your PlaceMate AI verification OTP is: {otp}\n\n"
+                    "This OTP is valid for 5 minutes.\n"
+                    "Do not share this OTP with anyone."
+                ),
+            },
+
+            timeout=15,
         )
 
-        print(
-            "EMAIL OTP SENT TO:",
-            email
-        )
+        if response.status_code not in (200, 201, 202):
+            raise Exception(
+                f"Brevo API error {response.status_code}: {response.text}"
+            )
 
-        print(
-            "OTP:",
-            otp
-        )
+        print("EMAIL OTP SENT TO:", email)
 
         return JsonResponse({
             "success": True,
@@ -474,30 +493,18 @@ def send_email_otp(request):
 
     except Exception as e:
 
-        print(
-            "EMAIL OTP ERROR:",
-            e
-        )
+        print("EMAIL OTP ERROR:", e)
 
-        request.session.pop(
-            "email_otp",
-            None
-        )
-
-        request.session.pop(
-            "email_otp_email",
-            None
-        )
-
-        request.session.pop(
-            "email_otp_time",
-            None
-        )
+        request.session.pop("email_otp", None)
+        request.session.pop("email_otp_email", None)
+        request.session.pop("email_otp_time", None)
 
         return JsonResponse({
             "success": False,
             "message": "Unable to send OTP. Please try again."
         })
+
+
 
 
 # =========================================================

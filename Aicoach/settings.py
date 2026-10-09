@@ -221,6 +221,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "bd5d83001@smtp-brevo.com"
 EMAIL_HOST_PASSWORD = os.getenv("BREVO_SMTP_KEY")
 
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+
+
+
 DEFAULT_FROM_EMAIL = "bhushanhyalij40@gmail.com"
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
