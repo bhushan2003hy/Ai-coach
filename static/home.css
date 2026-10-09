@@ -839,3 +839,33 @@ footer p {
         transform: none;
     }
 }
+
+
+
+
+/* FIX: CTA SECTION ALIGNMENT */
+
+.cta {
+    margin: 0 7% 75px;
+    padding: 55px 25px;
+    text-align: center;
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+.cta h2 {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cta p {
+    margin: 13px auto 23px;
+    max-width: 650px;
+    text-align: center;
+}
+
+.cta .primary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
