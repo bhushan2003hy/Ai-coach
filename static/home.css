@@ -869,3 +869,15 @@ footer p {
     align-items: center;
     justify-content: center;
 }
+
+.cta .primary-btn {
+    background: #FFFDF9;
+    border-color: #FFFDF9;
+    color: #17172F;
+}
+
+.cta .primary-btn:hover {
+    background: #FFF5E8;
+    border-color: #FFF5E8;
+    color: #17172F;
+}
