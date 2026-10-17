@@ -775,7 +775,7 @@ button:focus-visible {
 
 /* ================= PROFILE EDIT FORM ================= */
 
-.profile-panel {
+/* .profile-panel {
     max-height: calc(100vh - 100px);
     overflow-y: auto;
 }
@@ -848,7 +848,7 @@ button:focus-visible {
     font-size: 11px;
     margin-top: 4px;
 }
-
+ */
 
 
 /* ===== Profile Edit Form Design Fix ===== */
