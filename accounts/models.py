@@ -9,15 +9,15 @@ class Student(models.Model):
         return self.email
 
 
-from django.db import models
+# from django.db import models
 
 
-class Student(models.Model):
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
+# class Student(models.Model):
+#     email = models.EmailField(unique=True)
+#     password = models.CharField(max_length=128)
 
-    def __str__(self):
-        return self.email
+#     def __str__(self):
+#         return self.email
 
 
 class StudentProfile(models.Model):

@@ -50,88 +50,177 @@
 
     <!-- ================= PROFILE PANEL ================= -->
 
-    <div
-        class="profile-panel"
-        id="profilePanel"
-    >
+
+<!-- ================= PROFILE PANEL ================= -->
+
+<div class="profile-panel" id="profilePanel">
+
+    <!-- VIEW MODE -->
+    <div id="profileView">
 
         <div class="profile-header">
-
             <div class="large-avatar">
-                B
+                {{ profile.full_name|default:request.user.username|slice:":1"|upper }}
             </div>
 
             <div>
-
                 <h3 id="profileName">
-                    Bhushan Hyalij
+                    {{ profile.full_name|default:request.user.username }}
                 </h3>
 
                 <p id="profileEmail">
-                    bhushanhyalij40@gmail.com
+                    {{ request.user.email|default:"Email not added" }}
                 </p>
-
             </div>
-
         </div>
 
-
         <div class="profile-divider"></div>
-
 
         <div class="account-info">
 
             <div class="info-item">
                 <span class="info-label">📱 Mobile</span>
-                <span id="profileMobile">Not added</span>
+                <span id="profileMobile">{{ profile.mobile|default:"Not added" }}</span>
             </div>
 
             <div class="info-item">
                 <span class="info-label">🎓 College</span>
-                <span id="profileCollege">Not added</span>
+                <span id="profileCollege">{{ profile.college|default:"Not added" }}</span>
             </div>
 
             <div class="info-item">
                 <span class="info-label">💻 Branch</span>
-                <span id="profileBranch">Not added</span>
+                <span id="profileBranch">{{ profile.branch|default:"Not added" }}</span>
             </div>
 
             <div class="info-item">
                 <span class="info-label">📚 Degree</span>
-                <span id="profileDegree">Not added</span>
+                <span id="profileDegree">{{ profile.degree|default:"Not added" }}</span>
             </div>
 
             <div class="info-item">
                 <span class="info-label">📊 CGPA</span>
-                <span id="profileCgpa">Not added</span>
+                <span id="profileCgpa">{{ profile.cgpa|default:"Not added" }}</span>
             </div>
 
             <div class="info-item">
                 <span class="info-label">🎯 Graduation</span>
-                <span id="profileGraduation">Not added</span>
+                <span id="profileGraduation">{{ profile.graduation_year|default:"Not added" }}</span>
             </div>
 
         </div>
-
 
         <div class="profile-actions">
 
             <button
                 class="profile-action-btn"
-                type="button"
-            >
+                id="editProfileBtn"
+                type="button">
                 ⚙️ Profile Settings
             </button>
 
             <button
                 class="logout-btn"
                 id="logoutBtn"
-                type="button"
-            >
+                type="button">
                 🚪 Logout
             </button>
 
         </div>
+
+    </div>
+
+
+    <!-- EDIT MODE -->
+    <div id="profileEdit" hidden>
+
+        <h3 class="edit-title">Edit Profile</h3>
+
+        {% if profile_error %}
+            <p class="profile-error">{{ profile_error }}</p>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" id="profileEditForm">
+            {% csrf_token %}
+
+            <label for="editFullName">Full Name *</label>
+            <input id="editFullName" name="full_name" value="{{ profile.full_name|default:'' }}" required>
+
+            <label for="editMobile">Mobile *</label>
+            <input id="editMobile" name="mobile" value="{{ profile.mobile|default:'' }}" maxlength="15" required>
+
+            <label for="editCollege">College *</label>
+            <input id="editCollege" name="college" value="{{ profile.college|default:'' }}" required>
+
+            <label for="editDegree">Degree *</label>
+            <input id="editDegree" name="degree" value="{{ profile.degree|default:'' }}" required>
+
+            <label for="editBranch">Branch *</label>
+            <input id="editBranch" name="branch" value="{{ profile.branch|default:'' }}" required>
+
+            <label for="editCurrentYear">Current Year *</label>
+            <input id="editCurrentYear" name="current_year" value="{{ profile.current_year|default:'' }}" required>
+
+            <label for="editGraduationYear">Graduation Year *</label>
+            <input id="editGraduationYear" name="graduation_year" value="{{ profile.graduation_year|default:'' }}" required>
+
+            <label for="editCgpa">CGPA *</label>
+            <input id="editCgpa" name="cgpa" value="{{ profile.cgpa|default:'' }}" required>
+
+            <label for="editSkills">Skills *</label>
+            <textarea id="editSkills" name="skills" rows="3" required>{{ profile.skills|default:'' }}</textarea>
+
+            <label for="editGithub">GitHub URL</label>
+            <input id="editGithub" type="url" name="github" value="{{ profile.github|default:'' }}">
+
+            <label for="editLinkedin">LinkedIn URL</label>
+            <input id="editLinkedin" type="url" name="linkedin" value="{{ profile.linkedin|default:'' }}">
+
+            <label for="editResume">Resume (optional)</label>
+            <input id="editResume" type="file" name="resume" accept=".pdf,.doc,.docx">
+
+            {% if profile.resume %}
+                <p class="resume-current">Current resume is uploaded. Upload a new file to replace it.</p>
+            {% endif %}
+
+            <div class="edit-actions">
+                <button class="profile-action-btn" type="submit">
+                    Save Changes
+                </button>
+
+                <button class="logout-btn" id="cancelEditBtn" type="button">
+                    Cancel
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+
+        
+<div class="profile-actions">
+
+    <!-- Profile Settings Button -->
+    <button
+        class="profile-action-btn"
+        id="editProfileBtn"
+        type="button"
+    >
+        ⚙️ Profile Settings
+    </button>
+
+    <!-- Logout Button -->
+    <button
+        class="logout-btn"
+        id="logoutBtn"
+        type="button"
+    >
+        🚪 Logout
+    </button>
+
+</div>
 
     </div>
 

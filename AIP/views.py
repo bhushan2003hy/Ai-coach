@@ -1,7 +1,8 @@
 # =========================================================
 # AIP/views.py
 # =========================================================
-
+from django.contrib.auth.decorators import login_required
+from accounts.models import Student, StudentProfile
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
@@ -595,24 +596,96 @@ def profile(request):
 # DASHBOARD
 # =========================================================
 
+
+
+@login_required(login_url="/")
 def dashboard(request):
+    user = request.user
+    email = (user.email or "").strip().lower()
 
-    # ---------------------------------------------
-    # LOGIN REQUIRED
-    # ---------------------------------------------
+    # Email login / Google login
+    student = Student.objects.filter(
+        email__iexact=email
+    ).first() if email else None
 
-    if not request.user.is_authenticated:
+    profile = None
 
-        return redirect("/")
+    if student:
+        profile = StudentProfile.objects.filter(
+            student=student
+        ).first()
 
-    # ---------------------------------------------
-    # OPEN DASHBOARD
-    # ---------------------------------------------
+    # Mobile login: Django username mobile number hai
+    if profile is None and user.username.isdigit():
+        profile = StudentProfile.objects.filter(
+            mobile=user.username
+        ).select_related("student").first()
 
-    return render(
-        request,
-        "dashboard.html"
-    )
+        if profile:
+            student = profile.student
+
+    if request.method == "POST":
+        if profile is None:
+            return render(request, "dashboard.html", {
+                "profile": None,
+                "profile_error": (
+                    "Profile record nahi mila. Pehle registration "
+                    "ke dauran profile complete karo."
+                ),
+            })
+
+        fields = [
+            "full_name",
+            "mobile",
+            "college",
+            "degree",
+            "branch",
+            "current_year",
+            "graduation_year",
+            "cgpa",
+            "skills",
+            "github",
+            "linkedin",
+        ]
+
+        data = {
+            field: request.POST.get(field, "").strip()
+            for field in fields
+        }
+
+        required_fields = [
+            "full_name",
+            "mobile",
+            "college",
+            "degree",
+            "branch",
+            "current_year",
+            "graduation_year",
+            "cgpa",
+            "skills",
+        ]
+
+        if any(not data[field] for field in required_fields):
+            return render(request, "dashboard.html", {
+                "profile": profile,
+                "profile_error": "Please fill all required fields.",
+            })
+
+        # Existing profile ko hi update karo
+        for field, value in data.items():
+            setattr(profile, field, value)
+
+        resume = request.FILES.get("resume")
+        if resume:
+            profile.resume = resume
+
+        profile.save()
+
+        return redirect("dashboard")
+
+    return render(request, "dashboard.html", {
+        "profile": profile,
+    })
 
 
 # =========================================================

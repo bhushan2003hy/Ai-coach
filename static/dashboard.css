@@ -772,3 +772,79 @@ button:focus-visible {
 
 }
 
+
+/* ================= PROFILE EDIT FORM ================= */
+
+.profile-panel {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+#profileEdit[hidden],
+#profileView[hidden] {
+    display: none !important;
+}
+
+.edit-title {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+#profileEdit form {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+#profileEdit label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+#profileEdit input,
+#profileEdit textarea {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--ink);
+    font: 13px "DM Sans", sans-serif;
+}
+
+#profileEdit input:focus,
+#profileEdit textarea:focus {
+    outline: 2px solid rgba(75, 63, 224, .2);
+    border-color: var(--focus);
+}
+
+#profileEdit textarea {
+    resize: vertical;
+}
+
+.edit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-top: 15px;
+}
+
+.edit-actions button {
+    width: 100%;
+    min-height: 42px;
+}
+
+.profile-error {
+    margin-bottom: 12px;
+    color: var(--err);
+    font-size: 13px;
+}
+
+.resume-current {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+}
