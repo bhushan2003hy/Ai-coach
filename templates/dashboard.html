@@ -34,14 +34,14 @@
         <div class="topbar-right">
 
             <!-- Profile Button -->
-            <button
-                class="profile-btn"
-                id="profileBtn"
-                type="button"
-                aria-label="Open profile"
-            >
-                <span class="profile-avatar">B</span>
-            </button>
+            <button class="profile-btn" id="profileBtn">
+    <span class="profile-avatar-text">
+        {{ profile.full_name|default:request.user.username|slice:":1"|upper }}
+    </span>
+    <span class="profile-avatar-name">
+        {{ profile.full_name|default:request.user.username }}
+    </span>
+</button>
 
         </div>
 
@@ -197,30 +197,6 @@
     </div>
 
 </div>
-
-
-        
-{% comment %} <div class="profile-actions">
-
-    <!-- Profile Settings Button -->
-    <button
-        class="profile-action-btn"
-        id="editProfileBtn"
-        type="button"
-    >
-        ⚙️ Profile Settings
-    </button>
-
-    <!-- Logout Button -->
-    <button
-        class="logout-btn"
-        id="logoutBtn"
-        type="button"
-    >
-        🚪 Logout
-    </button>
-
-</div> {% endcomment %}
 
     </div>
 
