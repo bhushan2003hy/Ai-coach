@@ -48,7 +48,7 @@
     </header>
 
 
-    <!-- ================= PROFILE PANEL ================= -->
+    
 
 
 <!-- ================= PROFILE PANEL ================= -->
@@ -107,6 +107,40 @@
                 <span class="info-label">🎯 Graduation</span>
                 <span id="profileGraduation">{{ profile.graduation_year|default:"Not added" }}</span>
             </div>
+
+            {% comment %} Manuali Add karra GitHub {% endcomment %}
+            
+            {% if profile.github %}
+            <div class="info-item">
+                    <span class="info-label">GitHub URL</span>
+                         <a href="{{ profile.github }}" target="_blank">
+                         {{ profile.github }}
+                               </a>
+            </div>
+            {% endif %}
+
+            
+{% if profile.linkedin %}
+<div class="info-item">
+    <span class="info-label">LinkedIn URL</span>
+    <a href="{{ profile.linkedin }}" target="_blank">
+        {{ profile.linkedin }}
+    </a>
+</div>
+{% endif %}
+
+
+
+{% if profile.resume %}
+<div class="info-item">
+    <span class="info-label">Resume</span>
+    <a href="{{ profile.resume.url }}" target="_blank">
+        View Resume
+    </a>
+</div>
+{% endif %}
+
+
 
         </div>
 
