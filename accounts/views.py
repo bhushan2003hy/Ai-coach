@@ -864,31 +864,26 @@ def complete_profile(request):
     # LOGIN USER
     # =====================================================
 
-    user = User.objects.filter(
-        email=email
-    ).first()
+    user = User.objects.filter(email=email).first()
 
     # Mobile users have username=phone and email may be empty.
     # If no user is found by email, use the currently
     # authenticated mobile user.
 
-    if not user and request.user.is_authenticated:
+    # if not user and request.user.is_authenticated:
 
-        user = request.user
+    #     user = request.user
 
     # If still no user, create one.
-    if not user:
-
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=secrets.token_urlsafe(32)
-        )
-
-    login(
-        request,
-        user
+    if user is None:
+     user = User.objects.create_user(
+        username=email,
+        email=email,
+        password=secrets.token_urlsafe(32)
     )
+
+    login(request, user)
+    
 
     # =====================================================
     # CLEAR USED PROFILE SESSIONS
