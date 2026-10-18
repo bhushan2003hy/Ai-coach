@@ -433,6 +433,7 @@ def facebook_callback(request):
             timeout=10,
         )
         facebook_data = user_response.json()
+        print("FACEBOOK USER DATA:", facebook_data)
 
         if user_response.status_code != 200:
             print("FACEBOOK USER ERROR:", facebook_data)
