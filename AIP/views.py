@@ -1,6 +1,10 @@
 # =========================================================
 # AIP/views.py
 # =========================================================
+import secrets
+from urllib.parse import urlencode
+from django.views.decorators.http import require_GET
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.decorators import login_required
 from accounts.models import Student, StudentProfile
 from django.shortcuts import render, HttpResponse, redirect
@@ -345,6 +349,142 @@ def google_login(request):
 
 
 # =========================================================
+# FACEBOOK LOGIN
+# =========================================================
+
+
+@require_GET
+def facebook_login(request):
+    app_id = settings.FACEBOOK_APP_ID
+    redirect_uri = request.build_absolute_uri("/facebook-callback/")
+
+    if not app_id or not settings.FACEBOOK_APP_SECRET:
+        return HttpResponse(
+            "Facebook Login is not configured.",
+            status=500,
+        )
+
+    # Generate and save OAuth state to protect against CSRF.
+    state = secrets.token_urlsafe(32)
+    request.session["facebook_oauth_state"] = state
+
+    params = {
+        "client_id": app_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "email,public_profile",
+        "state": state,
+    }
+
+    authorization_url = "https://www.facebook.com/v26.0/dialog/oauth?" + urlencode(
+        params
+    )
+
+    return redirect(authorization_url)
+
+
+@require_GET
+def facebook_callback(request):
+    error = request.GET.get("error")
+    if error:
+        return HttpResponse(
+            "Facebook login was cancelled or denied. Please try again.",
+            status=400,
+        )
+
+    code = request.GET.get("code")
+    returned_state = request.GET.get("state")
+    saved_state = request.session.pop("facebook_oauth_state", None)
+
+    if not code or not saved_state or returned_state != saved_state:
+        return HttpResponse(
+            "Invalid Facebook login response. Please try again.",
+            status=400,
+        )
+
+    redirect_uri = request.build_absolute_uri("/facebook-callback/")
+
+    try:
+        token_response = requests.get(
+            "https://graph.facebook.com/v26.0/oauth/access_token",
+            params={
+                "client_id": settings.FACEBOOK_APP_ID,
+                "client_secret": settings.FACEBOOK_APP_SECRET,
+                "redirect_uri": redirect_uri,
+                "code": code,
+            },
+            timeout=10,
+        )
+        token_data = token_response.json()
+
+        if token_response.status_code != 200 or not token_data.get("access_token"):
+            print("FACEBOOK TOKEN ERROR:", token_data)
+            return HttpResponse(
+                "Unable to complete Facebook login. Please try again.",
+                status=400,
+            )
+
+        user_response = requests.get(
+            "https://graph.facebook.com/me",
+            params={
+                "fields": "id,name,email",
+                "access_token": token_data["access_token"],
+            },
+            timeout=10,
+        )
+        facebook_data = user_response.json()
+
+        if user_response.status_code != 200:
+            print("FACEBOOK USER ERROR:", facebook_data)
+            return HttpResponse(
+                "Unable to retrieve Facebook account details.",
+                status=400,
+            )
+
+        email = (facebook_data.get("email") or "").strip().lower()
+        name = (facebook_data.get("name") or "").strip()
+
+        if not email:
+            return HttpResponse(
+                "Facebook did not provide an email address. "
+                "Please use email or mobile registration instead.",
+                status=400,
+            )
+
+        # Never create an account automatically during OAuth.
+        # Existing account handling is deliberately conservative.
+        user = User.objects.filter(email__iexact=email).first()
+
+        if user:
+            # Do not link a Facebook identity to an existing account
+            # merely because the email addresses match.
+            return HttpResponse(
+                "An account with this email already exists. "
+                "Please sign in using your existing login method.",
+                status=409,
+            )
+
+        request.session.pop("google_email", None)
+        request.session.pop("google_name", None)
+        request.session.pop("email_verified_email", None)
+        request.session.pop("pending_registration_password", None)
+        request.session.pop("registered_mobile", None)
+
+        request.session["facebook_email"] = email
+        request.session["facebook_name"] = name
+        request.session["mobile_mode"] = False
+
+        return redirect("profile")
+
+    except requests.RequestException as exc:
+        print("FACEBOOK NETWORK ERROR:", exc)
+        return HttpResponse(
+            "Facebook login service is temporarily unavailable.",
+            status=502,
+        )
+
+
+# =========================================================
 # CHECK MOBILE REGISTERED
 # =========================================================
 
@@ -384,26 +524,32 @@ def check_mobile_registered(request):
 
 
 def profile(request):
+    facebook_email = request.session.get("facebook_email", "")
+    facebook_name = request.session.get("facebook_name", "")
 
     google_email = request.session.get("google_email", "")
+    google_name = request.session.get("google_name", "")
 
     email_verified_email = request.session.get("email_verified_email", "")
 
-    google_name = request.session.get("google_name", "")
+    profile_email = facebook_email or google_email or email_verified_email
 
-    # Google / Email OTP verified email
-    profile_email = google_email or email_verified_email
+    profile_name = facebook_name or google_name
 
-    # Mobile OTP user ke liye email manually enter hoga
     mobile_mode = request.session.get("mobile_mode", False)
+    
+    registered_mobile = request.session.get("registered_mobile", "")
+    
+    
 
     return render(
         request,
         "Profile.html",
         {
             "google_email": profile_email,
-            "google_name": google_name,
+            "google_name": profile_name,
             "mobile_mode": mobile_mode,
+            "registered_mobile": registered_mobile,
         },
     )
 

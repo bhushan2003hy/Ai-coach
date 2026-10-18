@@ -20,12 +20,13 @@ urlpatterns = [
     
     path("google-login/", views.google_login, name="google_login"),
     
+    path("facebook-login/", views.facebook_login, name="facebook_login"),
+
+    path("facebook-callback/", views.facebook_callback, name="facebook_callback"),
+    
     path("dashboard/", views.dashboard, name="dashboard"),
 
     path("profile/", views.profile, name="profile"),
 
     path("complete-profile/",accounts_views.complete_profile,name="complete_profile"),
-
-
-
 ]

@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth import login
@@ -12,13 +13,12 @@ import requests
 import secrets
 import time
 
+
 # =========================================================
 # REGISTER
 # =========================================================
 
-
 def register(request):
-
     if request.method != "POST":
         return render(request, "register.html")
 
@@ -29,10 +29,8 @@ def register(request):
     # =====================================================
 
     if register_type == "mobile":
-
         phone = request.POST.get("phone", "").strip()
 
-        # Validate mobile number
         if not phone.isdigit() or len(phone) != 10 or phone[0] not in "6789":
             return render(
                 request,
@@ -44,7 +42,6 @@ def register(request):
                 },
             )
 
-        # Check whether this mobile is already registered
         if User.objects.filter(username=phone).exists():
             return render(
                 request,
@@ -57,8 +54,6 @@ def register(request):
             )
 
         full_phone = "+91" + phone
-
-        # Get Firebase ID token
         id_token = request.POST.get("firebase_id_token", "").strip()
 
         if not id_token:
@@ -72,7 +67,6 @@ def register(request):
                 },
             )
 
-        # Verify Firebase token
         try:
             response = requests.post(
                 "https://identitytoolkit.googleapis.com/v1/accounts:lookup",
@@ -80,12 +74,10 @@ def register(request):
                 json={"idToken": id_token},
                 timeout=10,
             )
-
             data = response.json()
 
             if response.status_code != 200:
                 print("FIREBASE VERIFY RESPONSE:", data)
-
                 return render(
                     request,
                     "register.html",
@@ -96,9 +88,8 @@ def register(request):
                     },
                 )
 
-        except Exception as e:
-            print("FIREBASE VERIFY ERROR:", e)
-
+        except requests.RequestException as exc:
+            print("FIREBASE VERIFY ERROR:", exc)
             return render(
                 request,
                 "register.html",
@@ -109,7 +100,6 @@ def register(request):
                 },
             )
 
-        # Confirm that Firebase returned a verified phone
         users = data.get("users", [])
 
         if not users:
@@ -123,8 +113,7 @@ def register(request):
                 },
             )
 
-        firebase_user = users[0]
-        firebase_phone = firebase_user.get("phoneNumber", "")
+        firebase_phone = users[0].get("phoneNumber", "")
 
         if firebase_phone != full_phone:
             return render(
@@ -137,24 +126,28 @@ def register(request):
                 },
             )
 
-        # Save verified mobile in session.
-        # IMPORTANT: Do not create or log in a Django user here.
         request.session["registered_mobile"] = phone
         request.session["mobile_mode"] = True
 
-        # Clear any previous registration method's pending data
-        request.session.pop("google_email", None)
-        request.session.pop("google_name", None)
-        request.session.pop("email_verified_email", None)
-        request.session.pop("email_otp_verified", None)
-        request.session.pop("pending_registration_password", None)
+        # Clear pending registration data from other methods.
+        for key in (
+            "google_email",
+            "google_name",
+            "facebook_email",
+            "facebook_name",
+            "email_verified_email",
+            "email_otp_verified",
+            "pending_registration_password",
+        ):
+            request.session.pop(key, None)
 
         return render(
             request,
             "Profile.html",
             {
                 "success": (
-                    "Mobile verification successful! " "Please complete your profile."
+                    "Mobile verification successful! "
+                    "Please complete your profile."
                 ),
                 "otp_verified": True,
                 "phone": phone,
@@ -185,10 +178,10 @@ def register(request):
             {"error": "Please enter your password."},
         )
 
-    # Check server-side OTP verification
     otp_verified = request.session.get("email_otp_verified", False)
-
-    verified_email = request.session.get("email_verified_email", "").strip().lower()
+    verified_email = (
+        request.session.get("email_verified_email", "").strip().lower()
+    )
 
     if not otp_verified:
         return render(
@@ -204,14 +197,16 @@ def register(request):
             {"error": "The verified email does not match."},
         )
 
-    # Check duplicate account
     if (
         User.objects.filter(username=email).exists()
         or User.objects.filter(email__iexact=email).exists()
     ):
-        request.session.pop("email_otp_verified", None)
-        request.session.pop("email_verified_email", None)
-        request.session.pop("pending_registration_password", None)
+        for key in (
+            "email_otp_verified",
+            "email_verified_email",
+            "pending_registration_password",
+        ):
+            request.session.pop(key, None)
 
         return render(
             request,
@@ -219,24 +214,26 @@ def register(request):
             {"error": "This email is already registered. Please sign in."},
         )
 
-    # Store a HASHED password temporarily.
-    # The Django account is created only after profile submission.
     request.session["pending_registration_password"] = make_password(password)
     request.session["email_verified_email"] = email
     request.session["mobile_mode"] = False
 
-    # OTP has already been verified and consumed
-    request.session.pop("email_otp_verified", None)
-    request.session.pop("registered_mobile", None)
-    request.session.pop("google_email", None)
-    request.session.pop("google_name", None)
+    for key in (
+        "email_otp_verified",
+        "registered_mobile",
+        "google_email",
+        "google_name",
+        "facebook_email",
+        "facebook_name",
+    ):
+        request.session.pop(key, None)
 
     return render(
         request,
         "Profile.html",
         {
             "success": (
-                "Email verified successfully! " "Please complete your profile."
+                "Email verified successfully! Please complete your profile."
             ),
             "google_email": email,
             "email_verified": True,
@@ -249,7 +246,6 @@ def register(request):
 # PASSWORD RESET DONE
 # =========================================================
 
-
 def password_reset_done(request):
     return render(request, "registration/password_reset_done.html")
 
@@ -258,9 +254,7 @@ def password_reset_done(request):
 # SEND EMAIL OTP
 # =========================================================
 
-
 def send_email_otp(request):
-
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Invalid request."},
@@ -270,9 +264,10 @@ def send_email_otp(request):
     email = request.POST.get("email", "").strip().lower()
 
     if not email:
-        return JsonResponse({"success": False, "message": "Please enter your email."})
+        return JsonResponse(
+            {"success": False, "message": "Please enter your email."}
+        )
 
-    # Check whether the email is already registered
     if (
         User.objects.filter(username=email).exists()
         or User.objects.filter(email__iexact=email).exists()
@@ -280,14 +275,12 @@ def send_email_otp(request):
         return JsonResponse(
             {
                 "success": False,
-                "message": ("This email is already registered. Please sign in."),
+                "message": "This email is already registered. Please sign in.",
             }
         )
 
-    # Generate six-digit OTP
     otp = str(secrets.randbelow(900000) + 100000)
 
-    # Save OTP temporarily in the session
     request.session["email_otp"] = otp
     request.session["email_otp_email"] = email
     request.session["email_otp_time"] = time.time()
@@ -298,7 +291,7 @@ def send_email_otp(request):
 
     try:
         if not settings.BREVO_API_KEY:
-            raise Exception("BREVO_API_KEY is not configured")
+            raise RuntimeError("BREVO_API_KEY is not configured")
 
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
@@ -324,18 +317,21 @@ def send_email_otp(request):
         )
 
         if response.status_code not in (200, 201, 202):
-            raise Exception(f"Brevo API error {response.status_code}: {response.text}")
+            raise RuntimeError(
+                f"Brevo API error {response.status_code}: {response.text}"
+            )
 
         print("EMAIL OTP SENT TO:", email)
 
-        return JsonResponse({"success": True, "message": "OTP sent successfully."})
+        return JsonResponse(
+            {"success": True, "message": "OTP sent successfully."}
+        )
 
-    except Exception as e:
-        print("EMAIL OTP ERROR:", e)
+    except (requests.RequestException, RuntimeError) as exc:
+        print("EMAIL OTP ERROR:", exc)
 
-        request.session.pop("email_otp", None)
-        request.session.pop("email_otp_email", None)
-        request.session.pop("email_otp_time", None)
+        for key in ("email_otp", "email_otp_email", "email_otp_time"):
+            request.session.pop(key, None)
 
         return JsonResponse(
             {
@@ -349,9 +345,7 @@ def send_email_otp(request):
 # VERIFY EMAIL OTP
 # =========================================================
 
-
 def verify_email_otp(request):
-
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Invalid request."},
@@ -362,13 +356,19 @@ def verify_email_otp(request):
     entered_otp = request.POST.get("otp", "").strip()
 
     if not email:
-        return JsonResponse({"success": False, "message": "Email is required."})
+        return JsonResponse(
+            {"success": False, "message": "Email is required."}
+        )
 
     if not entered_otp:
-        return JsonResponse({"success": False, "message": "Please enter the OTP."})
+        return JsonResponse(
+            {"success": False, "message": "Please enter the OTP."}
+        )
 
     if not entered_otp.isdigit() or len(entered_otp) != 6:
-        return JsonResponse({"success": False, "message": "OTP must contain 6 digits."})
+        return JsonResponse(
+            {"success": False, "message": "OTP must contain 6 digits."}
+        )
 
     saved_otp = request.session.get("email_otp")
     saved_email = request.session.get("email_otp_email")
@@ -390,11 +390,9 @@ def verify_email_otp(request):
             }
         )
 
-    # OTP expires after five minutes
     if time.time() - saved_time > 300:
-        request.session.pop("email_otp", None)
-        request.session.pop("email_otp_email", None)
-        request.session.pop("email_otp_time", None)
+        for key in ("email_otp", "email_otp_email", "email_otp_time"):
+            request.session.pop(key, None)
 
         return JsonResponse(
             {
@@ -408,23 +406,22 @@ def verify_email_otp(request):
             {"success": False, "message": "Invalid OTP. Please try again."}
         )
 
-    # OTP verified; no Django user is created here
     request.session["email_otp_verified"] = True
     request.session["email_verified_email"] = email
 
-    request.session.pop("email_otp", None)
-    request.session.pop("email_otp_time", None)
-    request.session.pop("email_otp_email", None)
+    for key in ("email_otp", "email_otp_time", "email_otp_email"):
+        request.session.pop(key, None)
 
     print("EMAIL OTP VERIFIED:", email)
 
-    return JsonResponse({"success": True, "message": "Email verified successfully."})
+    return JsonResponse(
+        {"success": True, "message": "Email verified successfully."}
+    )
 
 
 # =========================================================
 # COMPLETE PROFILE
 # =========================================================
-
 
 def complete_profile(request):
     if request.method != "POST":
@@ -433,7 +430,6 @@ def complete_profile(request):
             status=405,
         )
 
-    # Profile fields
     full_name = request.POST.get("full_name", "").strip()
     mobile = request.POST.get("mobile", "").strip()
     college = request.POST.get("college", "").strip()
@@ -447,12 +443,20 @@ def complete_profile(request):
     linkedin = request.POST.get("linkedin", "").strip()
     resume = request.FILES.get("resume")
 
-    # Identify the registration method from the server-side session.
+    # Registration identity comes from the server-side session.
+    facebook_email = (
+        request.session.get("facebook_email", "").strip().lower()
+    )
     google_email = request.session.get("google_email", "").strip().lower()
-    verified_email = request.session.get("email_verified_email", "").strip().lower()
+    verified_email = (
+        request.session.get("email_verified_email", "").strip().lower()
+    )
     registered_mobile = request.session.get("registered_mobile", "").strip()
 
-    if google_email:
+    if facebook_email:
+        email = facebook_email
+        method = "facebook"
+    elif google_email:
         email = google_email
         method = "google"
     elif verified_email:
@@ -462,8 +466,15 @@ def complete_profile(request):
         email = request.POST.get("email", "").strip().lower()
         method = "mobile"
 
-    # Verify the registration session.
-    if method == "google" and not request.session.get("google_email"):
+    if method == "facebook" and not facebook_email:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Facebook verification expired. Please try again.",
+            }
+        )
+
+    if method == "google" and not google_email:
         return JsonResponse(
             {
                 "success": False,
@@ -471,14 +482,18 @@ def complete_profile(request):
             }
         )
 
-    if method == "email":
-        if not request.session.get("pending_registration_password"):
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Registration session expired. Please verify your email again.",
-                }
-            )
+    if method == "email" and not request.session.get(
+        "pending_registration_password"
+    ):
+        return JsonResponse(
+            {
+                "success": False,
+                "error": (
+                    "Registration session expired. "
+                    "Please verify your email again."
+                ),
+            }
+        )
 
     if method == "mobile":
         if not registered_mobile:
@@ -497,7 +512,6 @@ def complete_profile(request):
                 }
             )
 
-    # Validate mobile number for email and Google registration too.
     if not mobile.isdigit() or len(mobile) != 10 or mobile[0] not in "6789":
         return JsonResponse(
             {
@@ -506,7 +520,6 @@ def complete_profile(request):
             }
         )
 
-    # Required fields
     required_fields = [
         full_name,
         mobile,
@@ -528,7 +541,6 @@ def complete_profile(request):
             }
         )
 
-    # Validate resume on the server, not only in JavaScript.
     if resume:
         if resume.size > 5 * 1024 * 1024:
             return JsonResponse(
@@ -546,7 +558,6 @@ def complete_profile(request):
                 }
             )
 
-        # Basic PDF signature check.
         if resume.read(5) != b"%PDF-":
             return JsonResponse(
                 {
@@ -559,12 +570,13 @@ def complete_profile(request):
 
     try:
         with transaction.atomic():
-            # Don't create or reuse a Django account that already exists.
             if User.objects.filter(email__iexact=email).exists():
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "This email is already registered. Please sign in.",
+                        "error": (
+                            "This email is already registered. Please sign in."
+                        ),
                     }
                 )
 
@@ -572,7 +584,9 @@ def complete_profile(request):
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "This username is already registered. Please sign in.",
+                        "error": (
+                            "This username is already registered. Please sign in."
+                        ),
                     }
                 )
 
@@ -580,7 +594,10 @@ def complete_profile(request):
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "A profile already exists for this email. Please contact support.",
+                        "error": (
+                            "A profile already exists for this email. "
+                            "Please contact support."
+                        ),
                     }
                 )
 
@@ -588,17 +605,21 @@ def complete_profile(request):
                 return JsonResponse(
                     {
                         "success": False,
-                        "error": "This mobile number is already linked to a profile.",
+                        "error": (
+                            "This mobile number is already linked to a profile."
+                        ),
                     }
                 )
 
-            # Create the Django account only after profile validation.
             if method == "mobile":
                 if User.objects.filter(username=registered_mobile).exists():
                     return JsonResponse(
                         {
                             "success": False,
-                            "error": "This mobile number is already registered. Please sign in.",
+                            "error": (
+                                "This mobile number is already registered. "
+                                "Please sign in."
+                            ),
                         }
                     )
 
@@ -613,34 +634,33 @@ def complete_profile(request):
                 user = User(
                     username=email,
                     email=email,
-                    password=request.session["pending_registration_password"],
+                    password=request.session[
+                        "pending_registration_password"
+                    ],
                 )
                 user.save()
 
-            else:
-                # New Google users only; existing users should log in
-                # through google_login instead of completing registration.
-                if not google_email:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "error": "Please verify your Google account again.",
-                        }
-                    )
-
+            elif method in ("google", "facebook"):
                 user = User.objects.create_user(
                     username=email,
                     email=email,
                     password=secrets.token_urlsafe(32),
                 )
 
-            # Save the project's Student record.
+            else:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid registration method.",
+                    },
+                    status=400,
+                )
+
             student = Student.objects.create(
                 email=email,
                 password="",
             )
 
-            # Save the profile.
             profile = StudentProfile(
                 student=student,
                 full_name=full_name,
@@ -661,11 +681,10 @@ def complete_profile(request):
 
             profile.save()
 
-        # Log in only after all database changes succeed.
         login(request, user)
 
-    except Exception as e:
-        print("COMPLETE PROFILE ERROR:", e)
+    except Exception as exc:
+        print("COMPLETE PROFILE ERROR:", exc)
         return JsonResponse(
             {
                 "success": False,
@@ -680,6 +699,9 @@ def complete_profile(request):
         "mobile_mode",
         "google_email",
         "google_name",
+        "facebook_email",
+        "facebook_name",
+        "facebook_oauth_state",
         "email_verified_email",
         "email_otp_verified",
         "pending_registration_password",
