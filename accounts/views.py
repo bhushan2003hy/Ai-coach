@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from django.http import JsonResponse
-from django.core.mail import send_mail
+from django.db import transaction
 
 from .models import Student, StudentProfile
 
@@ -18,132 +19,72 @@ import time
 
 def register(request):
 
+    if request.method != "POST":
+        return render(request, "register.html")
+
+    register_type = request.POST.get("register_type", "email")
+
     # =====================================================
-    # POST REQUEST
+    # MOBILE OTP REGISTRATION - FIREBASE
     # =====================================================
 
-    if request.method == "POST":
+    if register_type == "mobile":
 
-        register_type = request.POST.get("register_type", "email")
+        phone = request.POST.get("phone", "").strip()
 
-        # =================================================
-        # MOBILE OTP REGISTRATION - FIREBASE
-        # =================================================
+        # Validate mobile number
+        if not phone.isdigit() or len(phone) != 10 or phone[0] not in "6789":
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "Please enter a valid 10-digit Indian mobile number.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-        if register_type == "mobile":
+        # Check whether this mobile is already registered
+        if User.objects.filter(username=phone).exists():
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "This mobile number is already registered.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-            phone = request.POST.get("phone", "").strip()
+        full_phone = "+91" + phone
 
-            # ---------------------------------------------
-            # CHECK MOBILE NUMBER
-            # ---------------------------------------------
+        # Get Firebase ID token
+        id_token = request.POST.get("firebase_id_token", "").strip()
 
-            if not phone.isdigit() or len(phone) != 10:
+        if not id_token:
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "Please verify your mobile number first.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Please enter a valid 10-digit mobile number.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
+        # Verify Firebase token
+        try:
+            response = requests.post(
+                "https://identitytoolkit.googleapis.com/v1/accounts:lookup",
+                params={"key": settings.FIREBASE_API_KEY},
+                json={"idToken": id_token},
+                timeout=10,
+            )
 
-            # ---------------------------------------------
-            # CHECK INDIAN MOBILE NUMBER
-            # ---------------------------------------------
+            data = response.json()
 
-            if phone[0] not in "6789":
-
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Please enter a valid Indian mobile number.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
-
-            # ---------------------------------------------
-            # FULL PHONE NUMBER
-            # ---------------------------------------------
-
-            full_phone = "+91" + phone
-
-            # ---------------------------------------------
-            # CHECK DUPLICATE MOBILE
-            # ---------------------------------------------
-
-            if User.objects.filter(username=phone).exists():
-
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "This mobile number is already registered.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
-
-            # =================================================
-            # FIREBASE ID TOKEN
-            # =================================================
-
-            id_token = request.POST.get("firebase_id_token", "").strip()
-
-            if not id_token:
-
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Please verify your mobile number first.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
-
-            # =================================================
-            # VERIFY FIREBASE TOKEN
-            # =================================================
-
-            try:
-
-                response = requests.post(
-                    "https://identitytoolkit.googleapis.com/v1/accounts:lookup",
-                    params={"key": settings.FIREBASE_API_KEY},
-                    json={"idToken": id_token},
-                    timeout=10,
-                )
-
-                data = response.json()
-
+            if response.status_code != 200:
                 print("FIREBASE VERIFY RESPONSE:", data)
-
-            except Exception as e:
-
-                print("FIREBASE VERIFY ERROR:", e)
-
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Unable to verify Firebase authentication.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
-
-            # =================================================
-            # CHECK FIREBASE USER
-            # =================================================
-
-            users = data.get("users", [])
-
-            if not users:
 
                 return render(
                     request,
@@ -155,48 +96,66 @@ def register(request):
                     },
                 )
 
-            firebase_user = users[0]
+        except Exception as e:
+            print("FIREBASE VERIFY ERROR:", e)
 
-            firebase_phone = firebase_user.get("phoneNumber", "")
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "Unable to verify Firebase authentication.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-            # ---------------------------------------------
-            # MAKE SURE PHONE MATCHES
-            # ---------------------------------------------
+        # Confirm that Firebase returned a verified phone
+        users = data.get("users", [])
 
-            if firebase_phone != full_phone:
+        if not users:
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "Firebase verification failed.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-                return render(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Verified mobile number does not match.",
-                        "phone": phone,
-                        "mobile_mode": True,
-                    },
-                )
+        firebase_user = users[0]
+        firebase_phone = firebase_user.get("phoneNumber", "")
 
-            # =================================================
-            # CREATE DJANGO USER
-            # =================================================
+        if firebase_phone != full_phone:
+            return render(
+                request,
+                "register.html",
+                {
+                    "error": "Verified mobile number does not match.",
+                    "phone": phone,
+                    "mobile_mode": True,
+                },
+            )
 
-            password = secrets.token_urlsafe(32)
-
-            user = User.objects.create_user(username=phone, password=password)
-
-            # =================================================
-            # LOGIN
-            # =================================================
-
-            login(request, user)
-
-            # Save verified mobile number in session
+        # Save verified mobile in session.
+        # IMPORTANT: Do not create or log in a Django user here.
         request.session["registered_mobile"] = phone
+        request.session["mobile_mode"] = True
+
+        # Clear any previous registration method's pending data
+        request.session.pop("google_email", None)
+        request.session.pop("google_name", None)
+        request.session.pop("email_verified_email", None)
+        request.session.pop("email_otp_verified", None)
+        request.session.pop("pending_registration_password", None)
 
         return render(
             request,
             "Profile.html",
             {
-                "success": "Mobile verification successful! Account created.",
+                "success": (
+                    "Mobile verification successful! " "Please complete your profile."
+                ),
                 "otp_verified": True,
                 "phone": phone,
                 "registered_mobile": phone,
@@ -205,117 +164,85 @@ def register(request):
             },
         )
 
-        # =================================================
-        # EMAIL OTP REGISTRATION
-        # =================================================
+    # =====================================================
+    # EMAIL OTP REGISTRATION
+    # =====================================================
 
-        email = request.POST.get("email", "").strip().lower()
+    email = request.POST.get("email", "").strip().lower()
+    password = request.POST.get("password", "")
 
-        password = request.POST.get("password", "")
+    if not email:
+        return render(
+            request,
+            "register.html",
+            {"error": "Please enter your email."},
+        )
 
-        # ---------------------------------------------
-        # EMPTY EMAIL
-        # ---------------------------------------------
+    if not password:
+        return render(
+            request,
+            "register.html",
+            {"error": "Please enter your password."},
+        )
 
-        if not email:
+    # Check server-side OTP verification
+    otp_verified = request.session.get("email_otp_verified", False)
 
-            return render(
-                request, "register.html", {"error": "Please enter your email."}
-            )
+    verified_email = request.session.get("email_verified_email", "").strip().lower()
 
-        # ---------------------------------------------
-        # EMPTY PASSWORD
-        # ---------------------------------------------
+    if not otp_verified:
+        return render(
+            request,
+            "register.html",
+            {"error": "Please verify your email using OTP first."},
+        )
 
-        if not password:
+    if verified_email != email:
+        return render(
+            request,
+            "register.html",
+            {"error": "The verified email does not match."},
+        )
 
-            return render(
-                request, "register.html", {"error": "Please enter your password."}
-            )
-
-        # =================================================
-        # SERVER-SIDE EMAIL OTP VERIFICATION
-        # =================================================
-
-        otp_verified = request.session.get("email_otp_verified", False)
-
-        verified_email = request.session.get("email_verified_email", "").strip().lower()
-
-        # ---------------------------------------------
-        # OTP NOT VERIFIED
-        # ---------------------------------------------
-
-        if not otp_verified:
-
-            return render(
-                request,
-                "register.html",
-                {"error": "Please verify your email using OTP first."},
-            )
-
-        # ---------------------------------------------
-        # VERIFIED EMAIL MUST MATCH
-        # ---------------------------------------------
-
-        if verified_email != email:
-
-            return render(
-                request,
-                "register.html",
-                {"error": "The verified email does not match."},
-            )
-
-        # =================================================
-        # CHECK DUPLICATE EMAIL
-        # =================================================
-
-        if User.objects.filter(username=email).exists():
-
-            request.session.pop("email_otp_verified", None)
-
-            request.session.pop("email_verified_email", None)
-
-            return render(
-                request, "register.html", {"error": "This email is already registered."}
-            )
-
-        # =================================================
-        # CREATE EMAIL USER
-        # =================================================
-
-        user = User.objects.create_user(username=email, email=email, password=password)
-
-        # =================================================
-        # KEEP VERIFIED EMAIL FOR PROFILE
-        # =================================================
-
+    # Check duplicate account
+    if (
+        User.objects.filter(username=email).exists()
+        or User.objects.filter(email__iexact=email).exists()
+    ):
         request.session.pop("email_otp_verified", None)
-
-        # IMPORTANT:
-        # email_verified_email is NOT removed here.
-        # Profile page needs it.
-
-        # =================================================
-        # LOGIN
-        # =================================================
-
-        login(request, user)
+        request.session.pop("email_verified_email", None)
+        request.session.pop("pending_registration_password", None)
 
         return render(
             request,
-            "Profile.html",
-            {
-                "success": "Email verified and account created successfully!",
-                "google_email": email,
-                "email_verified": True,
-            },
+            "register.html",
+            {"error": "This email is already registered. Please sign in."},
         )
 
-    # =====================================================
-    # GET REQUEST
-    # =====================================================
+    # Store a HASHED password temporarily.
+    # The Django account is created only after profile submission.
+    request.session["pending_registration_password"] = make_password(password)
+    request.session["email_verified_email"] = email
+    request.session["mobile_mode"] = False
 
-    return render(request, "register.html")
+    # OTP has already been verified and consumed
+    request.session.pop("email_otp_verified", None)
+    request.session.pop("registered_mobile", None)
+    request.session.pop("google_email", None)
+    request.session.pop("google_name", None)
+
+    return render(
+        request,
+        "Profile.html",
+        {
+            "success": (
+                "Email verified successfully! " "Please complete your profile."
+            ),
+            "google_email": email,
+            "email_verified": True,
+            "mobile_mode": False,
+        },
+    )
 
 
 # =========================================================
@@ -324,7 +251,6 @@ def register(request):
 
 
 def password_reset_done(request):
-
     return render(request, "registration/password_reset_done.html")
 
 
@@ -336,68 +262,41 @@ def password_reset_done(request):
 def send_email_otp(request):
 
     if request.method != "POST":
-
         return JsonResponse(
-            {"success": False, "message": "Invalid request."}, status=405
+            {"success": False, "message": "Invalid request."},
+            status=405,
         )
-
-    # =====================================================
-    # GET EMAIL
-    # =====================================================
 
     email = request.POST.get("email", "").strip().lower()
 
-    # =====================================================
-    # VALIDATE EMAIL
-    # =====================================================
-
     if not email:
-
         return JsonResponse({"success": False, "message": "Please enter your email."})
 
-    # =====================================================
-    # CHECK EMAIL ALREADY REGISTERED
-    # =====================================================
-
-    if User.objects.filter(username=email).exists():
-
+    # Check whether the email is already registered
+    if (
+        User.objects.filter(username=email).exists()
+        or User.objects.filter(email__iexact=email).exists()
+    ):
         return JsonResponse(
             {
                 "success": False,
-                "message": "This email is already registered. Please sign in.",
+                "message": ("This email is already registered. Please sign in."),
             }
         )
 
-    # =====================================================
-    # GENERATE 6 DIGIT OTP
-    # =====================================================
-
+    # Generate six-digit OTP
     otp = str(secrets.randbelow(900000) + 100000)
 
-    # =====================================================
-    # STORE OTP IN SESSION
-    # =====================================================
-
+    # Save OTP temporarily in the session
     request.session["email_otp"] = otp
-
     request.session["email_otp_email"] = email
-
     request.session["email_otp_time"] = time.time()
 
     request.session.pop("email_otp_verified", None)
-
     request.session.pop("email_verified_email", None)
-
-    # =====================================================
-    # SEND EMAIL
-    # =====================================================
-
-    # =====================================================
-    # SEND EMAIL USING BREVO API
-    # =====================================================
+    request.session.pop("pending_registration_password", None)
 
     try:
-
         if not settings.BREVO_API_KEY:
             raise Exception("BREVO_API_KEY is not configured")
 
@@ -432,7 +331,6 @@ def send_email_otp(request):
         return JsonResponse({"success": True, "message": "OTP sent successfully."})
 
     except Exception as e:
-
         print("EMAIL OTP ERROR:", e)
 
         request.session.pop("email_otp", None)
@@ -440,7 +338,10 @@ def send_email_otp(request):
         request.session.pop("email_otp_time", None)
 
         return JsonResponse(
-            {"success": False, "message": "Unable to send OTP. Please try again."}
+            {
+                "success": False,
+                "message": "Unable to send OTP. Please try again.",
+            }
         )
 
 
@@ -452,111 +353,67 @@ def send_email_otp(request):
 def verify_email_otp(request):
 
     if request.method != "POST":
-
         return JsonResponse(
-            {"success": False, "message": "Invalid request."}, status=405
+            {"success": False, "message": "Invalid request."},
+            status=405,
         )
 
-    # =====================================================
-    # GET DATA
-    # =====================================================
-
     email = request.POST.get("email", "").strip().lower()
-
     entered_otp = request.POST.get("otp", "").strip()
 
-    # =====================================================
-    # BASIC VALIDATION
-    # =====================================================
-
     if not email:
-
         return JsonResponse({"success": False, "message": "Email is required."})
 
     if not entered_otp:
-
         return JsonResponse({"success": False, "message": "Please enter the OTP."})
 
-    # =====================================================
-    # OTP MUST BE 6 DIGITS
-    # =====================================================
-
     if not entered_otp.isdigit() or len(entered_otp) != 6:
-
         return JsonResponse({"success": False, "message": "OTP must contain 6 digits."})
 
-    # =====================================================
-    # GET OTP FROM SESSION
-    # =====================================================
-
     saved_otp = request.session.get("email_otp")
-
     saved_email = request.session.get("email_otp_email")
-
     saved_time = request.session.get("email_otp_time")
 
-    # =====================================================
-    # CHECK OTP EXISTS
-    # =====================================================
-
     if not saved_otp or not saved_email or not saved_time:
-
         return JsonResponse(
-            {"success": False, "message": "OTP not found. Please request a new OTP."}
+            {
+                "success": False,
+                "message": "OTP not found. Please request a new OTP.",
+            }
         )
-
-    # =====================================================
-    # CHECK EMAIL MATCH
-    # =====================================================
 
     if saved_email != email:
-
         return JsonResponse(
-            {"success": False, "message": "Email does not match the OTP request."}
+            {
+                "success": False,
+                "message": "Email does not match the OTP request.",
+            }
         )
 
-    # =====================================================
-    # CHECK OTP EXPIRY — 5 MINUTES
-    # =====================================================
-
+    # OTP expires after five minutes
     if time.time() - saved_time > 300:
-
         request.session.pop("email_otp", None)
-
         request.session.pop("email_otp_email", None)
-
         request.session.pop("email_otp_time", None)
 
         return JsonResponse(
-            {"success": False, "message": "OTP has expired. Please request a new OTP."}
+            {
+                "success": False,
+                "message": "OTP has expired. Please request a new OTP.",
+            }
         )
 
-    # =====================================================
-    # CHECK OTP
-    # =====================================================
-
     if entered_otp != saved_otp:
-
         return JsonResponse(
             {"success": False, "message": "Invalid OTP. Please try again."}
         )
 
-    # =====================================================
-    # OTP VERIFIED
-    # =====================================================
-
+    # OTP verified; no Django user is created here
     request.session["email_otp_verified"] = True
-
     request.session["email_verified_email"] = email
 
-    # =====================================================
-    # REMOVE USED OTP
-    # =====================================================
-
     request.session.pop("email_otp", None)
-
     request.session.pop("email_otp_time", None)
-
     request.session.pop("email_otp_email", None)
 
     print("EMAIL OTP VERIFIED:", email)
@@ -570,65 +427,86 @@ def verify_email_otp(request):
 
 
 def complete_profile(request):
-
     if request.method != "POST":
+        return JsonResponse(
+            {"success": False, "error": "Invalid request."},
+            status=405,
+        )
 
-        return JsonResponse({"success": False, "error": "Invalid request."}, status=405)
-
-    # =====================================================
-    # GET PROFILE DATA
-    # =====================================================
-
+    # Profile fields
     full_name = request.POST.get("full_name", "").strip()
-
     mobile = request.POST.get("mobile", "").strip()
-
     college = request.POST.get("college", "").strip()
-
     degree = request.POST.get("degree", "").strip()
-
     branch = request.POST.get("branch", "").strip()
-
     current_year = request.POST.get("current_year", "").strip()
-
     graduation_year = request.POST.get("graduation_year", "").strip()
-
     cgpa = request.POST.get("cgpa", "").strip()
-
     skills = request.POST.get("skills", "").strip()
-
     github = request.POST.get("github", "").strip()
-
     linkedin = request.POST.get("linkedin", "").strip()
-
     resume = request.FILES.get("resume")
-    # =====================================================
-    # VERIFY REGISTERED MOBILE NUMBER
-    # =====================================================
 
+    # Identify the registration method from the server-side session.
+    google_email = request.session.get("google_email", "").strip().lower()
+    verified_email = request.session.get("email_verified_email", "").strip().lower()
     registered_mobile = request.session.get("registered_mobile", "").strip()
 
-    if registered_mobile:
+    if google_email:
+        email = google_email
+        method = "google"
+    elif verified_email:
+        email = verified_email
+        method = "email"
+    else:
+        email = request.POST.get("email", "").strip().lower()
+        method = "mobile"
+
+    # Verify the registration session.
+    if method == "google" and not request.session.get("google_email"):
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Google verification expired. Please try again.",
+            }
+        )
+
+    if method == "email":
+        if not request.session.get("pending_registration_password"):
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Registration session expired. Please verify your email again.",
+                }
+            )
+
+    if method == "mobile":
+        if not registered_mobile:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Please verify your mobile number first.",
+                }
+            )
+
         if mobile != registered_mobile:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "Registered mobile number cannot be changed.",
-                }
-            )
-    else:
-        if not mobile.isdigit() or len(mobile) != 10 or mobile[0] not in "6789":
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Please enter a valid 10-digit Indian mobile number.",
+                    "error": "Verified mobile number cannot be changed.",
                 }
             )
 
-    # =====================================================
-    # BASIC REQUIRED FIELD CHECK
-    # =====================================================
+    # Validate mobile number for email and Google registration too.
+    if not mobile.isdigit() or len(mobile) != 10 or mobile[0] not in "6789":
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Enter a valid 10-digit Indian mobile number.",
+            }
+        )
 
+    # Required fields
     required_fields = [
         full_name,
         mobile,
@@ -639,120 +517,177 @@ def complete_profile(request):
         graduation_year,
         cgpa,
         skills,
+        email,
     ]
 
     if not all(required_fields):
-
         return JsonResponse(
-            {"success": False, "error": "Please fill all required fields."}
+            {
+                "success": False,
+                "error": "Please fill all required fields.",
+            }
         )
 
-    # =====================================================
-    # GET VERIFIED EMAIL
-    # =====================================================
-
-    # First priority: Google verified email
-    email = request.session.get("google_email", "").strip().lower()
-
-    # Second priority: Email OTP verified email
-    if not email:
-
-        email = request.session.get("email_verified_email", "").strip().lower()
-
-    # Third priority: Mobile OTP user enters email
-    if not email:
-
-        email = request.POST.get("email", "").strip().lower()
-
-    # =====================================================
-    # EMAIL REQUIRED
-    # =====================================================
-
-    if not email:
-
-        return JsonResponse({"success": False, "error": "Email is required."})
-
-    # =====================================================
-    # CREATE STUDENT
-    # =====================================================
-
-    student = Student.objects.filter(email=email).first()
-
-    if not student:
-
-        student = Student.objects.create(email=email, password="")
-
-    # =====================================================
-    # CREATE / UPDATE PROFILE
-    # =====================================================
-
-    profile, created = StudentProfile.objects.update_or_create(
-        student=student,
-        defaults={
-            "full_name": full_name,
-            "mobile": mobile,
-            "college": college,
-            "degree": degree,
-            "branch": branch,
-            "current_year": current_year,
-            "graduation_year": graduation_year,
-            "cgpa": cgpa,
-            "skills": skills,
-            "github": github,
-            "linkedin": linkedin,
-        },
-    )
-
-    # =====================================================
-    # RESUME
-    # =====================================================
-
+    # Validate resume on the server, not only in JavaScript.
     if resume:
+        if resume.size > 5 * 1024 * 1024:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Resume must be 5 MB or smaller.",
+                }
+            )
 
-        profile.resume = resume
+        if not resume.name.lower().endswith(".pdf"):
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Please upload a PDF resume.",
+                }
+            )
 
-        profile.save()
+        # Basic PDF signature check.
+        if resume.read(5) != b"%PDF-":
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "The uploaded file does not appear to be a valid PDF.",
+                }
+            )
 
-    # =====================================================
-    # LOGIN USER
-    # =====================================================
+        resume.seek(0)
 
-    user = User.objects.filter(email=email).first()
+    try:
+        with transaction.atomic():
+            # Don't create or reuse a Django account that already exists.
+            if User.objects.filter(email__iexact=email).exists():
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "This email is already registered. Please sign in.",
+                    }
+                )
 
-    # Mobile users have username=phone and email may be empty.
-    # If no user is found by email, use the currently
-    # authenticated mobile user.
+            if User.objects.filter(username=email).exists():
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "This username is already registered. Please sign in.",
+                    }
+                )
 
-    # if not user and request.user.is_authenticated:
+            if Student.objects.filter(email__iexact=email).exists():
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "A profile already exists for this email. Please contact support.",
+                    }
+                )
 
-    #     user = request.user
+            if StudentProfile.objects.filter(mobile=mobile).exists():
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "This mobile number is already linked to a profile.",
+                    }
+                )
 
-    # If still no user, create one.
-    if user is None:
-        user = User.objects.create_user(
-            username=email, email=email, password=secrets.token_urlsafe(32)
+            # Create the Django account only after profile validation.
+            if method == "mobile":
+                if User.objects.filter(username=registered_mobile).exists():
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "error": "This mobile number is already registered. Please sign in.",
+                        }
+                    )
+
+                user = User(
+                    username=registered_mobile,
+                    email=email,
+                )
+                user.set_unusable_password()
+                user.save()
+
+            elif method == "email":
+                user = User(
+                    username=email,
+                    email=email,
+                    password=request.session["pending_registration_password"],
+                )
+                user.save()
+
+            else:
+                # New Google users only; existing users should log in
+                # through google_login instead of completing registration.
+                if not google_email:
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "error": "Please verify your Google account again.",
+                        }
+                    )
+
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=secrets.token_urlsafe(32),
+                )
+
+            # Save the project's Student record.
+            student = Student.objects.create(
+                email=email,
+                password="",
+            )
+
+            # Save the profile.
+            profile = StudentProfile(
+                student=student,
+                full_name=full_name,
+                mobile=mobile,
+                college=college,
+                degree=degree,
+                branch=branch,
+                current_year=current_year,
+                graduation_year=graduation_year,
+                cgpa=cgpa,
+                skills=skills,
+                github=github,
+                linkedin=linkedin,
+            )
+
+            if resume:
+                profile.resume = resume
+
+            profile.save()
+
+        # Log in only after all database changes succeed.
+        login(request, user)
+
+    except Exception as e:
+        print("COMPLETE PROFILE ERROR:", e)
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Unable to save your profile. Please try again.",
+            },
+            status=500,
         )
 
-    login(request, user)
-
-    # =====================================================
-    # CLEAR USED PROFILE SESSIONS
-    # =====================================================
-    request.session.pop("registered_mobile", None)
-
-    request.session.pop("google_email", None)
-
-    request.session.pop("google_name", None)
-
-    request.session.pop("email_verified_email", None)
-
-    request.session.pop("email_otp_verified", None)
-
-    print("PROFILE SAVED AND USER LOGGED IN:", email)
-
-    # =====================================================
-    # SUCCESS
-    # =====================================================
+    # Clear registration-specific session data after success.
+    for key in (
+        "registered_mobile",
+        "mobile_mode",
+        "google_email",
+        "google_name",
+        "email_verified_email",
+        "email_otp_verified",
+        "pending_registration_password",
+        "email_otp",
+        "email_otp_email",
+        "email_otp_time",
+    ):
+        request.session.pop(key, None)
 
     return JsonResponse(
         {

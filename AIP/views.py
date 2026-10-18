@@ -14,29 +14,23 @@ import requests
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
-
-
-
 # HOME / LANDING PAGE
+
 
 def home(request):
     return render(request, "home.html")
-
-
 
 
 # =========================================================
 # LOGIN PAGE
 # =========================================================
 
+
 def index(request):
 
     if request.method == "POST":
 
-        login_type = request.POST.get(
-            "login_type",
-            "email"
-        )
+        login_type = request.POST.get("login_type", "email")
 
         # =================================================
         # MOBILE OTP LOGIN
@@ -44,42 +38,30 @@ def index(request):
 
         if login_type == "mobile":
 
-            phone = request.POST.get(
-                "phone",
-                ""
-            ).strip()
+            phone = request.POST.get("phone", "").strip()
 
-            firebase_token = request.POST.get(
-                "firebase_id_token",
-                ""
-            ).strip()
+            firebase_token = request.POST.get("firebase_id_token", "").strip()
 
             # ---------------------------------------------
             # VALIDATE MOBILE NUMBER
             # ---------------------------------------------
 
-            if (
-                not phone.isdigit()
-                or len(phone) != 10
-                or phone[0] not in "6789"
-            ):
+            if not phone.isdigit() or len(phone) != 10 or phone[0] not in "6789":
 
                 return render(
                     request,
                     "index.html",
                     {
                         "error": "Please enter a valid 10-digit mobile number.",
-                        "mobile_mode": True
-                    }
+                        "mobile_mode": True,
+                    },
                 )
 
             # ---------------------------------------------
             # CHECK REGISTERED MOBILE
             # ---------------------------------------------
 
-            user = User.objects.filter(
-                username=phone
-            ).first()
+            user = User.objects.filter(username=phone).first()
 
             if user is None:
 
@@ -92,8 +74,8 @@ def index(request):
                             "Please create an account first."
                         ),
                         "mobile_mode": True,
-                        "phone": phone
-                    }
+                        "phone": phone,
+                    },
                 )
 
             # ---------------------------------------------
@@ -108,8 +90,8 @@ def index(request):
                     {
                         "error": "Please verify the OTP first.",
                         "mobile_mode": True,
-                        "phone": phone
-                    }
+                        "phone": phone,
+                    },
                 )
 
             # ---------------------------------------------
@@ -120,49 +102,34 @@ def index(request):
 
                 response = requests.post(
                     "https://identitytoolkit.googleapis.com/v1/accounts:lookup",
-                    params={
-                        "key": settings.FIREBASE_API_KEY
-                    },
-                    json={
-                        "idToken": firebase_token
-                    },
-                    timeout=10
+                    params={"key": settings.FIREBASE_API_KEY},
+                    json={"idToken": firebase_token},
+                    timeout=10,
                 )
 
                 data = response.json()
 
-                print(
-                    "FIREBASE LOGIN VERIFY RESPONSE:",
-                    data
-                )
+                print("FIREBASE LOGIN VERIFY RESPONSE:", data)
 
             except Exception as e:
 
-                print(
-                    "FIREBASE LOGIN VERIFY ERROR:",
-                    e
-                )
+                print("FIREBASE LOGIN VERIFY ERROR:", e)
 
                 return render(
                     request,
                     "index.html",
                     {
-                        "error": (
-                            "Unable to verify Firebase authentication."
-                        ),
+                        "error": ("Unable to verify Firebase authentication."),
                         "mobile_mode": True,
-                        "phone": phone
-                    }
+                        "phone": phone,
+                    },
                 )
 
             # ---------------------------------------------
             # CHECK FIREBASE USER
             # ---------------------------------------------
 
-            firebase_users = data.get(
-                "users",
-                []
-            )
+            firebase_users = data.get("users", [])
 
             if not firebase_users:
 
@@ -172,16 +139,13 @@ def index(request):
                     {
                         "error": "Firebase verification failed.",
                         "mobile_mode": True,
-                        "phone": phone
-                    }
+                        "phone": phone,
+                    },
                 )
 
             firebase_user = firebase_users[0]
 
-            firebase_phone = firebase_user.get(
-                "phoneNumber",
-                ""
-            )
+            firebase_phone = firebase_user.get("phoneNumber", "")
 
             expected_phone = "+91" + phone
 
@@ -195,27 +159,19 @@ def index(request):
                     request,
                     "index.html",
                     {
-                        "error": (
-                            "Verified mobile number does not match."
-                        ),
+                        "error": ("Verified mobile number does not match."),
                         "mobile_mode": True,
-                        "phone": phone
-                    }
+                        "phone": phone,
+                    },
                 )
 
             # ---------------------------------------------
             # DJANGO LOGIN
             # ---------------------------------------------
 
-            login(
-                request,
-                user
-            )
+            login(request, user)
 
-            print(
-                "MOBILE LOGIN SUCCESSFUL:",
-                phone
-            )
+            print("MOBILE LOGIN SUCCESSFUL:", phone)
 
             return redirect("dashboard")
 
@@ -223,15 +179,9 @@ def index(request):
         # EMAIL + PASSWORD LOGIN
         # =================================================
 
-        email = request.POST.get(
-            "email",
-            ""
-        ).strip().lower()
+        email = request.POST.get("email", "").strip().lower()
 
-        password = request.POST.get(
-            "password",
-            ""
-        )
+        password = request.POST.get("password", "")
 
         # ---------------------------------------------
         # CHECK EMAIL
@@ -239,13 +189,7 @@ def index(request):
 
         if not email:
 
-            return render(
-                request,
-                "index.html",
-                {
-                    "error": "Please enter your email."
-                }
-            )
+            return render(request, "index.html", {"error": "Please enter your email."})
 
         # ---------------------------------------------
         # CHECK PASSWORD
@@ -254,32 +198,18 @@ def index(request):
         if not password:
 
             return render(
-                request,
-                "index.html",
-                {
-                    "error": "Please enter your password."
-                }
+                request, "index.html", {"error": "Please enter your password."}
             )
 
         # ---------------------------------------------
         # AUTHENTICATE USER
         # ---------------------------------------------
 
-        user = authenticate(
-            request=request,
-            username=email,
-            password=password
-        )
+        user = authenticate(request=request, username=email, password=password)
 
-        print(
-            "LOGIN EMAIL:",
-            email
-        )
+        print("LOGIN EMAIL:", email)
 
-        print(
-            "PASSWORD RECEIVED:",
-            bool(password)
-        )
+        print("PASSWORD RECEIVED:", bool(password))
 
         # ---------------------------------------------
         # LOGIN SUCCESS
@@ -287,23 +217,13 @@ def index(request):
 
         if user is not None:
 
-            print(
-                "LOGIN AUTHENTICATE: SUCCESS"
-            )
+            print("LOGIN AUTHENTICATE: SUCCESS")
 
-            print(
-                "USER:",
-                user.username
-            )
+            print("USER:", user.username)
 
-            login(
-                request,
-                user
-            )
+            login(request, user)
 
-            print(
-                "DJANGO LOGIN SUCCESS"
-            )
+            print("DJANGO LOGIN SUCCESS")
 
             return redirect("dashboard")
 
@@ -311,61 +231,42 @@ def index(request):
         # LOGIN FAILED
         # ---------------------------------------------
 
-        print(
-            "LOGIN AUTHENTICATE: FAILED"
-        )
+        print("LOGIN AUTHENTICATE: FAILED")
 
         return render(
             request,
             "index.html",
-            {
-                "error": "This email is not registered create account first."
-            }
+            {"error": "This email is not registered create account first."},
         )
 
     # =================================================
     # GET REQUEST
     # =================================================
 
-    return render(
-        request,
-        "index.html"
-    )
+    return render(request, "index.html")
 
 
 # =========================================================
 # LOGIN WITH GOOGLE
 # =========================================================
 
+
 def google_login(request):
 
     if request.method != "POST":
 
-        return JsonResponse(
-            {
-                "success": False,
-                "error": "Invalid request."
-            },
-            status=405
-        )
+        return JsonResponse({"success": False, "error": "Invalid request."}, status=405)
 
     # -----------------------------------------------------
     # GET GOOGLE ID TOKEN
     # -----------------------------------------------------
 
-    google_token = request.POST.get(
-        "id_token",
-        ""
-    ).strip()
+    google_token = request.POST.get("id_token", "").strip()
 
     if not google_token:
 
         return JsonResponse(
-            {
-                "success": False,
-                "error": "Google ID token is missing."
-            },
-            status=400
+            {"success": False, "error": "Google ID token is missing."}, status=400
         )
 
     try:
@@ -375,24 +276,16 @@ def google_login(request):
         # -------------------------------------------------
 
         decoded_token = google_id_token.verify_oauth2_token(
-            google_token,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID
+            google_token, google_requests.Request(), settings.GOOGLE_CLIENT_ID
         )
 
         # -------------------------------------------------
         # GET GOOGLE USER INFORMATION
         # -------------------------------------------------
 
-        email = decoded_token.get(
-            "email",
-            ""
-        ).strip().lower()
+        email = decoded_token.get("email", "").strip().lower()
 
-        name = decoded_token.get(
-            "name",
-            ""
-        ).strip()
+        name = decoded_token.get("name", "").strip()
 
         # -------------------------------------------------
         # CHECK EMAIL
@@ -401,30 +294,19 @@ def google_login(request):
         if not email:
 
             return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Google account email not found."
-                },
-                status=400
+                {"success": False, "error": "Google account email not found."},
+                status=400,
             )
 
-        print(
-            "GOOGLE VERIFIED EMAIL:",
-            email
-        )
+        print("GOOGLE VERIFIED EMAIL:", email)
 
-        print(
-            "GOOGLE VERIFIED NAME:",
-            name
-        )
+        print("GOOGLE VERIFIED NAME:", name)
 
         # -------------------------------------------------
         # CHECK USER IN DJANGO DATABASE
         # -------------------------------------------------
 
-        user = User.objects.filter(
-            email=email
-        ).first()
+        user = User.objects.filter(email=email).first()
 
         # =================================================
         # EXISTING USER
@@ -432,22 +314,11 @@ def google_login(request):
 
         if user is not None:
 
-            login(
-                request,
-                user
-            )
+            login(request, user)
 
-            print(
-                "EXISTING GOOGLE USER LOGIN:",
-                email
-            )
+            print("EXISTING GOOGLE USER LOGIN:", email)
 
-            return JsonResponse(
-                {
-                    "success": True,
-                    "redirect_url": "/dashboard/"
-                }
-            )
+            return JsonResponse({"success": True, "redirect_url": "/dashboard/"})
 
         # =================================================
         # NEW GOOGLE USER
@@ -460,126 +331,71 @@ def google_login(request):
         # Google user ke liye mobile mode false rahega
         request.session["mobile_mode"] = False
 
-        print(
-            "NEW GOOGLE USER:",
-            email
-        )
+        print("NEW GOOGLE USER:", email)
 
-        return JsonResponse(
-            {
-                "success": True,
-                "redirect_url": "/profile/"
-            }
-        )
+        return JsonResponse({"success": True, "redirect_url": "/profile/"})
 
     except Exception as e:
 
-        print(
-            "GOOGLE LOGIN ERROR TYPE:",
-            type(e).__name__
-        )
+        print("GOOGLE LOGIN ERROR TYPE:", type(e).__name__)
 
-        print(
-            "GOOGLE LOGIN ERROR:",
-            e
-        )
+        print("GOOGLE LOGIN ERROR:", e)
 
-        return JsonResponse(
-            {
-                "success": False,
-                "error": str(e)
-            },
-            status=401
-        )
+        return JsonResponse({"success": False, "error": str(e)}, status=401)
 
 
 # =========================================================
 # CHECK MOBILE REGISTERED
 # =========================================================
 
+
 def check_mobile_registered(request):
 
     if request.method != "POST":
 
         return JsonResponse(
-            {
-                "registered": False,
-                "error": "Invalid request."
-            },
-            status=405
+            {"registered": False, "error": "Invalid request."}, status=405
         )
 
-    phone = request.POST.get(
-        "phone",
-        ""
-    ).strip()
+    phone = request.POST.get("phone", "").strip()
 
     # ---------------------------------------------
     # VALIDATE MOBILE
     # ---------------------------------------------
 
-    if (
-        not phone.isdigit()
-        or len(phone) != 10
-        or phone[0] not in "6789"
-    ):
+    if not phone.isdigit() or len(phone) != 10 or phone[0] not in "6789":
 
         return JsonResponse(
-            {
-                "registered": False,
-                "error": (
-                    "Enter a valid 10-digit mobile number."
-                )
-            }
+            {"registered": False, "error": ("Enter a valid 10-digit mobile number.")}
         )
 
     # ---------------------------------------------
     # CHECK DATABASE
     # ---------------------------------------------
 
-    registered = User.objects.filter(
-        username=phone
-    ).exists()
+    registered = User.objects.filter(username=phone).exists()
 
-    return JsonResponse(
-        {
-            "registered": registered
-        }
-    )
+    return JsonResponse({"registered": registered})
 
 
 # =========================================================
 # PROFILE
 # =========================================================
 
+
 def profile(request):
 
-    google_email = request.session.get(
-        "google_email",
-        ""
-    )
+    google_email = request.session.get("google_email", "")
 
-    email_verified_email = request.session.get(
-        "email_verified_email",
-        ""
-    )
+    email_verified_email = request.session.get("email_verified_email", "")
 
-    google_name = request.session.get(
-        "google_name",
-        ""
-    )
+    google_name = request.session.get("google_name", "")
 
     # Google / Email OTP verified email
-    profile_email = (
-        google_email
-        or email_verified_email
-    )
+    profile_email = google_email or email_verified_email
 
     # Mobile OTP user ke liye email manually enter hoga
-    mobile_mode = request.session.get(
-        "mobile_mode",
-        False
-    )
+    mobile_mode = request.session.get("mobile_mode", False)
 
     return render(
         request,
@@ -587,8 +403,8 @@ def profile(request):
         {
             "google_email": profile_email,
             "google_name": google_name,
-            "mobile_mode": mobile_mode
-        }
+            "mobile_mode": mobile_mode,
+        },
     )
 
 
@@ -597,42 +413,43 @@ def profile(request):
 # =========================================================
 
 
-
 @login_required(login_url="/")
 def dashboard(request):
     user = request.user
     email = (user.email or "").strip().lower()
 
     # Email login / Google login
-    student = Student.objects.filter(
-        email__iexact=email
-    ).first() if email else None
+    student = Student.objects.filter(email__iexact=email).first() if email else None
 
     profile = None
 
     if student:
-        profile = StudentProfile.objects.filter(
-            student=student
-        ).first()
+        profile = StudentProfile.objects.filter(student=student).first()
 
     # Mobile login: Django username mobile number hai
     if profile is None and user.username.isdigit():
-        profile = StudentProfile.objects.filter(
-            mobile=user.username
-        ).select_related("student").first()
+        profile = (
+            StudentProfile.objects.filter(mobile=user.username)
+            .select_related("student")
+            .first()
+        )
 
         if profile:
             student = profile.student
 
     if request.method == "POST":
         if profile is None:
-            return render(request, "dashboard.html", {
-                "profile": None,
-                "profile_error": (
-                    "Profile record nahi mila. Pehle registration "
-                    "ke dauran profile complete karo."
-                ),
-            })
+            return render(
+                request,
+                "dashboard.html",
+                {
+                    "profile": None,
+                    "profile_error": (
+                        "Profile record nahi mila. Pehle registration "
+                        "ke dauran profile complete karo."
+                    ),
+                },
+            )
 
         fields = [
             "full_name",
@@ -648,10 +465,7 @@ def dashboard(request):
             "linkedin",
         ]
 
-        data = {
-            field: request.POST.get(field, "").strip()
-            for field in fields
-        }
+        data = {field: request.POST.get(field, "").strip() for field in fields}
 
         required_fields = [
             "full_name",
@@ -666,10 +480,14 @@ def dashboard(request):
         ]
 
         if any(not data[field] for field in required_fields):
-            return render(request, "dashboard.html", {
-                "profile": profile,
-                "profile_error": "Please fill all required fields.",
-            })
+            return render(
+                request,
+                "dashboard.html",
+                {
+                    "profile": profile,
+                    "profile_error": "Please fill all required fields.",
+                },
+            )
 
         # Existing profile ko hi update karo
         for field, value in data.items():
@@ -683,29 +501,30 @@ def dashboard(request):
 
         return redirect("dashboard")
 
-    return render(request, "dashboard.html", {
-        "profile": profile,
-    })
+    return render(
+        request,
+        "dashboard.html",
+        {
+            "profile": profile,
+        },
+    )
 
 
 # =========================================================
 # ABOUT
 # =========================================================
 
+
 def about(request):
 
-    return HttpResponse(
-        "This is Home about"
-    )
+    return HttpResponse("This is Home about")
 
 
 # =========================================================
 # CONTACT
 # =========================================================
 
+
 def contac(request):
 
-    return HttpResponse(
-        "This is Home contac"
-    )
-
+    return HttpResponse("This is Home contac")
