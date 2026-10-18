@@ -356,7 +356,7 @@ def google_login(request):
 @require_GET
 def facebook_login(request):
     app_id = settings.FACEBOOK_APP_ID
-    redirect_uri = request.build_absolute_uri("/facebook-callback/")
+    redirect_uri = "https://ai-coach-production-7d85.up.railway.app/facebook-callback/"
 
     if not app_id or not settings.FACEBOOK_APP_SECRET:
         return HttpResponse(
@@ -402,7 +402,7 @@ def facebook_callback(request):
             status=400,
         )
 
-    redirect_uri = request.build_absolute_uri("/facebook-callback/")
+    redirect_uri = "https://ai-coach-production-7d85.up.railway.app/facebook-callback/"
 
     try:
         token_response = requests.get(
