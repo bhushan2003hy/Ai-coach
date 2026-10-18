@@ -286,36 +286,35 @@
 
                             <!-- MOBILE -->
 
-                            <div class="form-group full-width">
+                           
+<!-- MOBILE -->
+<div class="form-group full-width">
 
-                                <label for="mobile">
+    <label for="mobile">
+        Mobile Number
+        <span class="required">*</span>
+    </label>
 
-                                    Mobile Number
+    <div class="mobile-input">
+        <span class="country-code">+91</span>
 
-                                    <span class="required">*</span>
+        <input
+            type="tel"
+            id="mobile"
+            name="mobile"
+            value="{{ registered_mobile|default:'' }}"
+            placeholder="Your registered mobile number"
+            maxlength="10"
+            inputmode="numeric"
+            autocomplete="tel-national"
+            readonly
+            required
+        >
+    </div>
 
-                                </label>
+    <small>Your registered mobile number cannot be changed here.</small>
 
-                                <div class="mobile-input">
-
-                                    <span class="country-code">
-
-                                        +91
-
-                                    </span>
-
-                                    <input
-                                        type="tel"
-                                        id="mobile"
-                                        name="mobile"
-                                        placeholder="Enter 10 digit mobile number"
-                                        maxlength="10"
-                                        inputmode="numeric"
-                                    >
-
-                                </div>
-
-                            </div>
+</div>
 
                         </div>
 
