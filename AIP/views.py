@@ -679,3 +679,21 @@ def dashboard(request):
     )
 
 
+# =========================================================
+# ABOUT
+# =========================================================
+
+
+def about(request):
+
+    return HttpResponse("This is Home about")
+
+
+# =========================================================
+# CONTACT
+# =========================================================
+
+
+def contac(request):
+
+    return HttpResponse("This is Home contac")
