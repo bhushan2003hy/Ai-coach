@@ -488,8 +488,6 @@ def github_callback(request):
         for key in (
             "google_email",
             "google_name",
-            "facebook_email",
-            "facebook_name",
             "email_verified_email",
             "pending_registration_password",
             "registered_mobile",

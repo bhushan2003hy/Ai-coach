@@ -133,8 +133,6 @@ def register(request):
         for key in (
             "google_email",
             "google_name",
-            "facebook_email",
-            "facebook_name",
             "email_verified_email",
             "email_otp_verified",
             "pending_registration_password",
@@ -223,8 +221,7 @@ def register(request):
         "registered_mobile",
         "google_email",
         "google_name",
-        "facebook_email",
-        "facebook_name",
+       
     ):
         request.session.pop(key, None)
 
@@ -444,9 +441,7 @@ def complete_profile(request):
     resume = request.FILES.get("resume")
 
     # Registration identity comes from the server-side session.
-    facebook_email = (
-    request.session.get("facebook_email", "").strip().lower()
-      )
+    
     google_email = (
     request.session.get("google_email", "").strip().lower()
      )
@@ -461,9 +456,6 @@ def complete_profile(request):
     if github_email:
         email = github_email
         method = "github"
-    elif facebook_email:
-        email = facebook_email
-        method = "facebook"
     elif google_email:
         email = google_email
         method = "google"
@@ -474,13 +466,7 @@ def complete_profile(request):
         email = request.POST.get("email", "").strip().lower()
         method = "mobile"
 
-    if method == "facebook" and not facebook_email:
-        return JsonResponse(
-            {
-                "success": False,
-                "error": "Facebook verification expired. Please try again.",
-            }
-        )
+    
 
     if method == "google" and not google_email:
         return JsonResponse(
@@ -648,7 +634,7 @@ def complete_profile(request):
                 )
                 user.save()
 
-            elif method in ("google", "facebook", "github"):
+            elif method in ("google","github"):
              user = User.objects.create_user(
              username=email,
              email=email,
@@ -707,9 +693,6 @@ def complete_profile(request):
         "mobile_mode",
         "google_email",
         "google_name",
-        "facebook_email",
-        "facebook_name",
-        "facebook_oauth_state",
         "github_email",
         "github_name",
         "email_verified_email",
