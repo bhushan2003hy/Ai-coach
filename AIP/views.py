@@ -348,10 +348,10 @@ def google_login(request):
         return JsonResponse({"success": False, "error": str(e)}, status=401)
 
 
+
 # =========================================================
 # GITHUB LOGIN
 # =========================================================
-
 
 @require_GET
 def github_login(request):
@@ -366,12 +366,18 @@ def github_login(request):
 
     params = {
         "client_id": client_id,
-        "redirect_uri": "https://ai-coach-production-7d85.up.railway.app/github-callback/",
+        "redirect_uri": (
+            "https://ai-coach-production-7d85.up.railway.app/"
+            "github-callback/"
+        ),
         "scope": "read:user user:email",
         "state": state,
     }
 
-    authorization_url = "https://github.com/login/oauth/authorize?" + urlencode(params)
+    authorization_url = (
+        "https://github.com/login/oauth/authorize?"
+        + urlencode(params)
+    )
     return redirect(authorization_url)
 
 
@@ -440,7 +446,11 @@ def github_callback(request):
             )
 
         github_id = str(github_data.get("id", "")).strip()
-        name = (github_data.get("name") or github_data.get("login") or "").strip()
+        name = (
+            github_data.get("name")
+            or github_data.get("login")
+            or ""
+        ).strip()
 
         if not github_id:
             return HttpResponse(
@@ -448,8 +458,7 @@ def github_callback(request):
                 status=400,
             )
 
-        # GitHub profile email may be private.
-        # Request the authenticated user's email list.
+        # Get the authenticated GitHub user's verified primary email.
         email_response = requests.get(
             "https://api.github.com/user/emails",
             headers=headers,
@@ -474,17 +483,33 @@ def github_callback(request):
                 status=400,
             )
 
-        # Do not automatically merge an existing account by email.
-        existing_user = User.objects.filter(email__iexact=email).first()
+        # Find an existing Django account with the same email.
+        existing_user = User.objects.filter(
+            email__iexact=email
+        ).first()
 
         if existing_user:
-            return HttpResponse(
-                "An account with this email already exists. "
-                "Please sign in using your existing login method.",
-                status=409,
-            )
+            # Sign in to the existing account.
+            login(request, existing_user)
 
-        # Clear any stale provider/registration session values.
+            # Clear stale provider and registration session values.
+            for key in (
+                "google_email",
+                "google_name",
+                "github_email",
+                "github_name",
+                "github_id",
+                "email_verified_email",
+                "pending_registration_password",
+                "registered_mobile",
+                "mobile_mode",
+            ):
+                request.session.pop(key, None)
+
+            print("EXISTING GITHUB USER LOGIN:", email)
+            return redirect("dashboard")
+
+        # New GitHub user: continue to profile registration.
         for key in (
             "google_email",
             "google_name",
@@ -499,6 +524,7 @@ def github_callback(request):
         request.session["github_id"] = github_id
         request.session["mobile_mode"] = False
 
+        print("NEW GITHUB USER:", email)
         return redirect("profile")
 
     except (requests.RequestException, ValueError) as exc:
@@ -507,6 +533,8 @@ def github_callback(request):
             "GitHub login service is temporarily unavailable.",
             status=502,
         )
+
+
 
 
 # =========================================================
