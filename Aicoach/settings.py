@@ -124,28 +124,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Aicoach.wsgi.application'
 
 
-# ==================================================
-# DATABASE
-# ==================================================
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-
-#         'NAME': 'aicoach_db',
-
-#         'USER': 'root',
-
-#         'PASSWORD': 'Bhushan@2003',
-
-#         'HOST': 'localhost',
-
-#         'PORT': '3306',
-#     }
-# }
-
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -237,3 +215,6 @@ FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# GITHUB LOGIN SETTINGS
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
