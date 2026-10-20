@@ -349,138 +349,164 @@ def google_login(request):
 
 
 # =========================================================
-# FACEBOOK LOGIN
+# GITHUB LOGIN
 # =========================================================
 
 
 @require_GET
-def facebook_login(request):
-    app_id = settings.FACEBOOK_APP_ID
-    redirect_uri = "https://ai-coach-production-7d85.up.railway.app/facebook-callback/"
+def github_login(request):
+    client_id = getattr(settings, "GITHUB_CLIENT_ID", "")
+    client_secret = getattr(settings, "GITHUB_CLIENT_SECRET", "")
 
-    if not app_id or not settings.FACEBOOK_APP_SECRET:
-        return HttpResponse(
-            "Facebook Login is not configured.",
-            status=500,
-        )
+    if not client_id or not client_secret:
+        return HttpResponse("GitHub Login is not configured.", status=500)
 
-    # Generate and save OAuth state to protect against CSRF.
     state = secrets.token_urlsafe(32)
-    request.session["facebook_oauth_state"] = state
+    request.session["github_oauth_state"] = state
 
     params = {
-        "client_id": app_id,
-        "redirect_uri": redirect_uri,
-        "response_type": "code",
-        "scope": "email,public_profile",
+        "client_id": client_id,
+        "redirect_uri": "https://ai-coach-production-7d85.up.railway.app/github-callback/",
+        "scope": "read:user user:email",
         "state": state,
     }
 
-    authorization_url = "https://www.facebook.com/v26.0/dialog/oauth?" + urlencode(
-        params
-    )
-
+    authorization_url = "https://github.com/login/oauth/authorize?" + urlencode(params)
     return redirect(authorization_url)
 
 
 @require_GET
-def facebook_callback(request):
-    error = request.GET.get("error")
-    if error:
+def github_callback(request):
+    if request.GET.get("error"):
         return HttpResponse(
-            "Facebook login was cancelled or denied. Please try again.",
+            "GitHub login was cancelled or denied. Please try again.",
             status=400,
         )
 
     code = request.GET.get("code")
     returned_state = request.GET.get("state")
-    saved_state = request.session.pop("facebook_oauth_state", None)
+    saved_state = request.session.pop("github_oauth_state", None)
 
     if not code or not saved_state or returned_state != saved_state:
         return HttpResponse(
-            "Invalid Facebook login response. Please try again.",
+            "Invalid GitHub login response. Please try again.",
             status=400,
         )
 
-    redirect_uri = "https://ai-coach-production-7d85.up.railway.app/facebook-callback/"
-
     try:
-        token_response = requests.get(
-            "https://graph.facebook.com/v26.0/oauth/access_token",
-            params={
-                "client_id": settings.FACEBOOK_APP_ID,
-                "client_secret": settings.FACEBOOK_APP_SECRET,
-                "redirect_uri": redirect_uri,
+        token_response = requests.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": settings.GITHUB_CLIENT_ID,
+                "client_secret": settings.GITHUB_CLIENT_SECRET,
                 "code": code,
+                "redirect_uri": (
+                    "https://ai-coach-production-7d85.up.railway.app/"
+                    "github-callback/"
+                ),
             },
-            timeout=10,
+            headers={"Accept": "application/json"},
+            timeout=15,
         )
-        token_data = token_response.json()
 
-        if token_response.status_code != 200 or not token_data.get("access_token"):
-            print("FACEBOOK TOKEN ERROR:", token_data)
+        token_data = token_response.json()
+        access_token = token_data.get("access_token")
+
+        if token_response.status_code != 200 or not access_token:
+            print("GITHUB TOKEN ERROR:", token_data)
             return HttpResponse(
-                "Unable to complete Facebook login. Please try again.",
+                "Unable to complete GitHub login. Please try again.",
                 status=400,
             )
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
 
         user_response = requests.get(
-            "https://graph.facebook.com/me",
-            params={
-                "fields": "id,name,email",
-                "access_token": token_data["access_token"],
-            },
-            timeout=10,
+            "https://api.github.com/user",
+            headers=headers,
+            timeout=15,
         )
-        facebook_data = user_response.json()
-        print("FACEBOOK USER DATA:", facebook_data)
+        github_data = user_response.json()
 
         if user_response.status_code != 200:
-            print("FACEBOOK USER ERROR:", facebook_data)
+            print("GITHUB USER ERROR:", github_data)
             return HttpResponse(
-                "Unable to retrieve Facebook account details.",
+                "Unable to retrieve GitHub account details.",
                 status=400,
             )
 
-        email = (facebook_data.get("email") or "").strip().lower()
-        name = (facebook_data.get("name") or "").strip()
+        github_id = str(github_data.get("id", "")).strip()
+        name = (github_data.get("name") or github_data.get("login") or "").strip()
+
+        if not github_id:
+            return HttpResponse(
+                "GitHub did not provide a valid account ID.",
+                status=400,
+            )
+
+        # GitHub profile email may be private.
+        # Request the authenticated user's email list.
+        email_response = requests.get(
+            "https://api.github.com/user/emails",
+            headers=headers,
+            timeout=15,
+        )
+
+        email = ""
+
+        if email_response.status_code == 200:
+            email_data = email_response.json()
+
+            for item in email_data:
+                if item.get("primary") and item.get("verified"):
+                    email = item.get("email", "").strip().lower()
+                    break
 
         if not email:
             return HttpResponse(
-                "Facebook did not provide an email address. "
-                "Please use email or mobile registration instead.",
+                "GitHub did not provide a verified primary email. "
+                "Please make your primary email available in GitHub "
+                "or use your existing login method.",
                 status=400,
             )
 
-        # Never create an account automatically during OAuth.
-        # Existing account handling is deliberately conservative.
-        user = User.objects.filter(email__iexact=email).first()
+        # Do not automatically merge an existing account by email.
+        existing_user = User.objects.filter(email__iexact=email).first()
 
-        if user:
-            # Do not link a Facebook identity to an existing account
-            # merely because the email addresses match.
+        if existing_user:
             return HttpResponse(
                 "An account with this email already exists. "
                 "Please sign in using your existing login method.",
                 status=409,
             )
 
-        request.session.pop("google_email", None)
-        request.session.pop("google_name", None)
-        request.session.pop("email_verified_email", None)
-        request.session.pop("pending_registration_password", None)
-        request.session.pop("registered_mobile", None)
+        # Clear any stale provider/registration session values.
+        for key in (
+            "google_email",
+            "google_name",
+            "facebook_email",
+            "facebook_name",
+            "email_verified_email",
+            "pending_registration_password",
+            "registered_mobile",
+        ):
+            request.session.pop(key, None)
 
-        request.session["facebook_email"] = email
-        request.session["facebook_name"] = name
+        request.session["github_email"] = email
+        request.session["github_name"] = name
+        request.session["github_id"] = github_id
         request.session["mobile_mode"] = False
 
         return redirect("profile")
 
-    except requests.RequestException as exc:
-        print("FACEBOOK NETWORK ERROR:", exc)
+    except (requests.RequestException, ValueError) as exc:
+        print("GITHUB LOGIN ERROR:", exc)
         return HttpResponse(
-            "Facebook login service is temporarily unavailable.",
+            "GitHub login service is temporarily unavailable.",
             status=502,
         )
 
@@ -525,23 +551,19 @@ def check_mobile_registered(request):
 
 
 def profile(request):
-    facebook_email = request.session.get("facebook_email", "")
-    facebook_name = request.session.get("facebook_name", "")
+    github_email = request.session.get("github_email", "")
+    github_name = request.session.get("github_name", "")
 
     google_email = request.session.get("google_email", "")
     google_name = request.session.get("google_name", "")
 
     email_verified_email = request.session.get("email_verified_email", "")
 
-    profile_email = facebook_email or google_email or email_verified_email
-
-    profile_name = facebook_name or google_name
+    profile_email = github_email or google_email or email_verified_email
+    profile_name = github_name or google_name
 
     mobile_mode = request.session.get("mobile_mode", False)
-    
     registered_mobile = request.session.get("registered_mobile", "")
-    
-    
 
     return render(
         request,
@@ -657,21 +679,3 @@ def dashboard(request):
     )
 
 
-# =========================================================
-# ABOUT
-# =========================================================
-
-
-def about(request):
-
-    return HttpResponse("This is Home about")
-
-
-# =========================================================
-# CONTACT
-# =========================================================
-
-
-def contac(request):
-
-    return HttpResponse("This is Home contac")
