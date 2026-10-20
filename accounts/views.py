@@ -445,15 +445,23 @@ def complete_profile(request):
 
     # Registration identity comes from the server-side session.
     facebook_email = (
-        request.session.get("facebook_email", "").strip().lower()
-    )
-    google_email = request.session.get("google_email", "").strip().lower()
+    request.session.get("facebook_email", "").strip().lower()
+      )
+    google_email = (
+    request.session.get("google_email", "").strip().lower()
+     )
+    github_email = (
+    request.session.get("github_email", "").strip().lower()
+)
     verified_email = (
-        request.session.get("email_verified_email", "").strip().lower()
-    )
-    registered_mobile = request.session.get("registered_mobile", "").strip()
-
-    if facebook_email:
+    request.session.get("email_verified_email", "").strip().lower()
+)
+    registered_mobile = request.session.get("registered_mobile", "").strip() 
+    
+    if github_email:
+        email = github_email
+        method = "github"
+    elif facebook_email:
         email = facebook_email
         method = "facebook"
     elif google_email:
@@ -640,12 +648,12 @@ def complete_profile(request):
                 )
                 user.save()
 
-            elif method in ("google", "facebook"):
-                user = User.objects.create_user(
-                    username=email,
-                    email=email,
-                    password=secrets.token_urlsafe(32),
-                )
+            elif method in ("google", "facebook", "github"):
+             user = User.objects.create_user(
+             username=email,
+             email=email,
+             password=secrets.token_urlsafe(32),
+    )
 
             else:
                 return JsonResponse(
@@ -702,6 +710,8 @@ def complete_profile(request):
         "facebook_email",
         "facebook_name",
         "facebook_oauth_state",
+        "github_email",
+        "github_name",
         "email_verified_email",
         "email_otp_verified",
         "pending_registration_password",
