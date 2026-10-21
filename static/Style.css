@@ -595,3 +595,10 @@ a{color:inherit}
         font-size: 14px;
     }
 }
+
+.app-logo {
+    width: 180px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
