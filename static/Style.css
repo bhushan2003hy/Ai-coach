@@ -596,3 +596,9 @@ a{color:inherit}
     }
 }
 
+.app-logo {
+    width: 180px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
